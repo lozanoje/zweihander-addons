@@ -5,6 +5,14 @@ import { MODULE_ID } from "./targets.mjs";
  * Solo se contabilizan los de combatientes del combate activo y ya iniciado.
  */
 
+/**
+ * Diagnóstico: en la consola del navegador, CONFIG.debug.zweihanderAddons = true
+ * activa mensajes que explican por qué se cobra (o no) cada acción.
+ */
+export function dbg(...args) {
+  if (CONFIG.debug?.zweihanderAddons) console.log("zweihander-addons |", ...args);
+}
+
 /** Tiempo máximo (ms) que un gasto previsto espera a que se cree su tirada. */
 const EXPECT_TTL = 2 * 60 * 1000;
 
