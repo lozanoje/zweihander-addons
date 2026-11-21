@@ -11,7 +11,7 @@ Añade al Combat Tracker, justo debajo de los iconos de cada contendiente, **una
   seleccionado, se guardan en los tokens de tu personaje.
 - **Armas:** botones con el nombre (abreviado, configurable) de las armas con `system.equipped = true`.
   Al pulsar se abre el diálogo de tirada del sistema. Por defecto solo los propietarios del actor las ven; el ajuste «Armas solo para propietarios» permite mostrarlas a todos (los no propietarios las ven desactivadas).
-- **Arrastrar** se pueden arrastrar ataques sobre otros contendientes del asistente de combate
+- **Arrastrar y soltar:** se pueden arrastrar ataques sobre otros contendientes del asistente de combate
 
 ## Instalación
 Descomprimir en `Data/modules/zweihander-addons` y activar el módulo en el mundo.

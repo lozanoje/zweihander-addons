@@ -1,5 +1,6 @@
 import { MODULE_ID, registerTargetSync } from "./targets.mjs";
 import { onRenderCombatTracker } from "./combat-tracker.mjs";
+import { registerChatTarget } from "./chat-target.mjs";
 
 Hooks.once("init", () => {
   game.settings.register(MODULE_ID, "nameMaxLength", {
@@ -11,6 +12,15 @@ Hooks.once("init", () => {
     default: 12,
     range: { min: 4, max: 30, step: 1 },
     onChange: () => refreshTracker()
+  });
+
+  game.settings.register(MODULE_ID, "canvasFollowsSelection", {
+    name: "ZWH_ADDONS.Settings.CanvasFollowsSelection.Name",
+    hint: "ZWH_ADDONS.Settings.CanvasFollowsSelection.Hint",
+    scope: "client",
+    config: true,
+    type: Boolean,
+    default: true
   });
 
   game.settings.register(MODULE_ID, "weaponsOwnersOnly", {
@@ -27,6 +37,7 @@ Hooks.once("init", () => {
 
 Hooks.once("ready", () => {
   registerTargetSync();
+  registerChatTarget();
 });
 
 Hooks.on("renderCombatTracker", onRenderCombatTracker);

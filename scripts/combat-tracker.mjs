@@ -1,4 +1,4 @@
-import { MODULE_ID, getTargetIds } from "./targets.mjs";
+import { MODULE_ID, getTargetIds, tokenImage } from "./targets.mjs";
 import { rollWeaponAttack } from "./weapon-roll.mjs";
 import { makeWeaponDraggable, registerDropTarget } from "./drag-drop.mjs";
 
@@ -125,12 +125,6 @@ function buildTargets(combatant, combat) {
     entries.push(entry);
   }
   return entries;
-}
-
-/** Evita usar vídeos (webm/mp4) como <img>. */
-function tokenImage(doc) {
-  const src = doc.texture?.src ?? "";
-  return /\.(webm|mp4|m4v)$/i.test(src) ? (doc.actor?.img ?? "icons/svg/mystery-man.svg") : src;
 }
 
 /* ---------------- Armas equipadas ---------------- */

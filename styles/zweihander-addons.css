@@ -65,3 +65,53 @@ li.combatant.zwh-drop-hover {
   outline-offset: -2px;
 }
 .zwh-addons button.zwh-weapon[draggable="true"] { cursor: grab; }
+
+/* Objetivo del ataque en el chat: token a la derecha de la cabecera, con diana superpuesta */
+.title-and-subtitle.zwh-has-target {
+  position: relative;
+  min-height: 52px;
+  padding-right: 58px;
+}
+.zwh-chat-target {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 48px;
+  height: 48px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.zwh-chat-target img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 2px solid var(--zh-clr-aqua, #689d6a);
+  border-radius: 50%;
+  object-fit: cover;
+}
+/* Diana: anillo interior + retícula, translúcida para que se vea el retrato */
+.zwh-chat-target::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1.5px solid var(--zh-clr-aqua, #689d6a);
+  border-radius: 50%;
+  background:
+    linear-gradient(var(--zh-clr-aqua, #689d6a), var(--zh-clr-aqua, #689d6a)) center / 1.5px 150% no-repeat,
+    linear-gradient(var(--zh-clr-aqua, #689d6a), var(--zh-clr-aqua, #689d6a)) center / 150% 1.5px no-repeat;
+  opacity: 0.75;
+  pointer-events: none;
+}
+.zwh-chat-target-more {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  padding: 0 4px;
+  font-size: 0.65rem;
+  line-height: 1.3;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--zh-clr-aqua, #689d6a);
+}

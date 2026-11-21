@@ -10,8 +10,13 @@
       "WeaponsOwnersOnly": {
         "Name": "Armas solo para propietarios",
         "Hint": "Activado: solo los propietarios del actor ven sus armas equipadas en el Combat Tracker. Desactivado: las ve todo el mundo (solo los propietarios pueden tirar)."
+      },
+      "CanvasFollowsSelection": {
+        "Name": "Objetivos del lienzo según el token seleccionado",
+        "Hint": "Al seleccionar un token, los objetivos marcados en el lienzo pasan a ser los que ese token tiene guardados (los mismos que muestra el asistente de combate). Desactivado: el lienzo no cambia al seleccionar."
       }
     },
-    "NoTokenOnCanvas": "No se puede poner como objetivo: el token no está en la escena que se está viendo."
+    "NoTokenOnCanvas": "No se puede poner como objetivo: el token no está en la escena que se está viendo.",
+    "AttackTarget": "Objetivo del ataque"
   }
 }
