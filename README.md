@@ -18,3 +18,7 @@ Añade a las tarjetas de ataque y daño el icono del objetivo
 ## Instalación
 
 Instala con este manifiesto: ```https://raw.githubusercontent.com/lozanoje/zweihander-addons/main/module.json```
+
+## Big warning
+
+This module has been coded using AI, whatever it might implies for you. So use at your own risk!
