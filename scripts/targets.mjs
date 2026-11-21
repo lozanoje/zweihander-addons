@@ -14,8 +14,32 @@ export function getTargetIds(tokenDoc) {
 export function registerTargetSync() {
   const sync = foundry.utils.debounce(syncTargets, 100);
   Hooks.on("targetToken", (user) => {
-    if (user.id === game.user.id) sync();
+    if (user.id === game.user.id && !suppressSync) sync();
   });
+}
+
+let suppressSync = false;
+
+/**
+ * Pone un único objetivo (soltando los demás) y lo guarda en el flag del token
+ * atacante, sin pasar por la sincronización por selección: así el objetivo se
+ * asigna al token que ataca aunque no esté seleccionado.
+ * @param {Token} targetToken        Placeable que pasa a ser el objetivo
+ * @param {TokenDocument} [sourceDoc] Token atacante
+ */
+export async function setSingleTarget(targetToken, sourceDoc) {
+  suppressSync = true;
+  try {
+    targetToken.setTarget(true, { releaseOthers: true, groupSelection: false });
+  } finally {
+    setTimeout(() => { suppressSync = false; }, 300);
+  }
+  if (sourceDoc?.isOwner) {
+    const current = getTargetIds(sourceDoc);
+    if (current.length !== 1 || current[0] !== targetToken.id) {
+      await sourceDoc.setFlag(MODULE_ID, TARGETS_FLAG, [targetToken.id]);
+    }
+  }
 }
 
 async function syncTargets() {

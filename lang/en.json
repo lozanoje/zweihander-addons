@@ -11,6 +11,7 @@
         "Name": "Weapons visible to owners only",
         "Hint": "Enabled: only the actor's owners see its equipped weapons in the Combat Tracker. Disabled: everyone sees them (only owners can roll)."
       }
-    }
+    },
+    "NoTokenOnCanvas": "Cannot target: the token is not on the scene being viewed."
   }
 }

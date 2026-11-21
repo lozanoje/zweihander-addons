@@ -1,5 +1,6 @@
 import { MODULE_ID, getTargetIds } from "./targets.mjs";
 import { rollWeaponAttack } from "./weapon-roll.mjs";
+import { makeWeaponDraggable, registerDropTarget } from "./drag-drop.mjs";
 
 const isEquippedWeapon = (item) =>
   item.type === "weapon" && item.system?.equipped === true;
@@ -27,6 +28,9 @@ export function onRenderCombatTracker(app, html) {
 
     const combatant = combat.combatants.get(li.dataset.combatantId);
     if (!combatant) return;
+
+    // Cualquier combatiente puede recibir un arma arrastrada como objetivo.
+    registerDropTarget(li, app);
 
     const row = buildRow(combatant, combat);
     if (!row) return;
@@ -148,8 +152,12 @@ function buildWeapons(combatant) {
     btn.className = "zwh-weapon inline-control";
     btn.textContent = truncate(weapon.name, max);
     btn.dataset.tooltip = weapon.name;
-    if (isOwner) btn.addEventListener("click", () => rollWeaponAttack(weapon));
-    else btn.disabled = true;
+    if (isOwner) {
+      btn.addEventListener("click", () => rollWeaponAttack(weapon));
+      makeWeaponDraggable(btn, weapon, combatant);
+    } else {
+      btn.disabled = true;
+    }
     return btn;
   });
 }

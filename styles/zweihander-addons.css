@@ -58,3 +58,10 @@ li.combatant.zwh-has-row > .token-name {
 .zwh-addons button.zwh-weapon:hover {
   background: color-mix(in srgb, var(--zh-clr-aqua, #689d6a) 20%, transparent);
 }
+
+/* Resaltado del combatiente sobre el que se suelta un arma */
+li.combatant.zwh-drop-hover {
+  outline: 2px dashed var(--zh-clr-aqua, #689d6a);
+  outline-offset: -2px;
+}
+.zwh-addons button.zwh-weapon[draggable="true"] { cursor: grab; }

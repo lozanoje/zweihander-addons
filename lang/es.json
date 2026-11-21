@@ -11,6 +11,7 @@
         "Name": "Armas solo para propietarios",
         "Hint": "Activado: solo los propietarios del actor ven sus armas equipadas en el Combat Tracker. Desactivado: las ve todo el mundo (solo los propietarios pueden tirar)."
       }
-    }
+    },
+    "NoTokenOnCanvas": "No se puede poner como objetivo: el token no está en la escena que se está viendo."
   }
 }
