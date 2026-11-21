@@ -3,7 +3,7 @@ li.combatant.zwh-has-row {
   flex-wrap: wrap;
   row-gap: 0;
   /* Sube la fila de targets y armas hacia la de iconos (más negativo = más junto) */
-  --zwh-row-offset: -10px;
+  --zwh-row-offset: -2px;
 }
 li.combatant.zwh-has-row > .token-name {
   flex: 1 1 0;
