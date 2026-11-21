@@ -1,6 +1,7 @@
 import { MODULE_ID, registerTargetSync } from "./targets.mjs";
 import { onRenderCombatTracker } from "./combat-tracker.mjs";
 import { registerChatTarget } from "./chat-target.mjs";
+import { registerCanvasDrop } from "./drag-drop.mjs";
 
 Hooks.once("init", () => {
   game.settings.register(MODULE_ID, "nameMaxLength", {
@@ -38,6 +39,7 @@ Hooks.once("init", () => {
 Hooks.once("ready", () => {
   registerTargetSync();
   registerChatTarget();
+  registerCanvasDrop();
 });
 
 Hooks.on("renderCombatTracker", onRenderCombatTracker);
