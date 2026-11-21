@@ -14,9 +14,19 @@
       "CanvasFollowsSelection": {
         "Name": "Canvas targets follow the selected token",
         "Hint": "When you select a token, the targets shown on the canvas become the ones stored for that token (the same ones the Combat Tracker shows). Disabled: the canvas does not change when selecting."
+      },
+      "ApWarning": {
+        "Name": "Action points warning",
+        "Hint": "Warn when more action points are used than are available"
       }
     },
     "NoTokenOnCanvas": "Cannot target: the token is not on the scene being viewed.",
-    "AttackTarget": "Attack target"
+    "AttackTarget": "Attack target",
+    "AP": {
+      "Title": "Action points warning",
+      "NotEnough": "You do not have enough action points. Do you want to continue?",
+      "Yes": "Yes",
+      "No": "No"
+    }
   }
 }

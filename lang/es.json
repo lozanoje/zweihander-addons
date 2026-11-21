@@ -14,9 +14,19 @@
       "CanvasFollowsSelection": {
         "Name": "Objetivos del lienzo según el token seleccionado",
         "Hint": "Al seleccionar un token, los objetivos marcados en el lienzo pasan a ser los que ese token tiene guardados (los mismos que muestra el asistente de combate). Desactivado: el lienzo no cambia al seleccionar."
+      },
+      "ApWarning": {
+        "Name": "Aviso puntos de acción",
+        "Hint": "Avisar cuando se usan más puntos de acción de los disponibles"
       }
     },
     "NoTokenOnCanvas": "No se puede poner como objetivo: el token no está en la escena que se está viendo.",
-    "AttackTarget": "Objetivo del ataque"
+    "AttackTarget": "Objetivo del ataque",
+    "AP": {
+      "Title": "Aviso puntos de acción",
+      "NotEnough": "No dispone de suficientes puntos de acción, ¿desea continuar?",
+      "Yes": "Sí",
+      "No": "No"
+    }
   }
 }

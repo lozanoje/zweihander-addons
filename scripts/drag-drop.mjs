@@ -149,6 +149,6 @@ async function performAttack({ uuid, tokenUuid }, targetToken) {
   }
 
   const attackerDoc = tokenUuid ? await fromUuid(tokenUuid) : null;
-  await setSingleTarget(targetToken, attackerDoc);
-  await rollWeaponAttack(weapon);
+  // El objetivo se fija después del aviso de puntos de acción: si dicen que no, no cambia nada.
+  await rollWeaponAttack(weapon, { beforeRoll: () => setSingleTarget(targetToken, attackerDoc) });
 }
