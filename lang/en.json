@@ -1,0 +1,16 @@
+{
+  "ZWH_ADDONS": {
+    "Targets": "Targets",
+    "Weapons": "Equipped weapons",
+    "Settings": {
+      "NameMaxLength": {
+        "Name": "Maximum weapon name length",
+        "Hint": "Longer names are shortened with “…” in the Combat Tracker."
+      },
+      "WeaponsOwnersOnly": {
+        "Name": "Weapons visible to owners only",
+        "Hint": "Enabled: only the actor's owners see its equipped weapons in the Combat Tracker. Disabled: everyone sees them (only owners can roll)."
+      }
+    }
+  }
+}

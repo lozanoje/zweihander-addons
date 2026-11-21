@@ -1,0 +1,16 @@
+{
+  "ZWH_ADDONS": {
+    "Targets": "Objetivos",
+    "Weapons": "Armas equipadas",
+    "Settings": {
+      "NameMaxLength": {
+        "Name": "Longitud máxima del nombre del arma",
+        "Hint": "Los nombres más largos se acortan con «…» en el Combat Tracker."
+      },
+      "WeaponsOwnersOnly": {
+        "Name": "Armas solo para propietarios",
+        "Hint": "Activado: solo los propietarios del actor ven sus armas equipadas en el Combat Tracker. Desactivado: las ve todo el mundo (solo los propietarios pueden tirar)."
+      }
+    }
+  }
+}

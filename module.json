@@ -1,0 +1,17 @@
+{
+  "id": "zweihander-addons",
+  "title": "Zweihander Addons",
+  "description": "Algunos añadidos para Zweihander.",
+  "version": "0.2.4",
+  "authors": [{ "name": "Viriato139ac" }],
+  "compatibility": { "minimum": "14", "verified": "14" },
+  "esmodules": ["scripts/main.mjs"],
+  "styles": ["styles/zweihander-addons.css"],
+  "languages": [
+    { "lang": "es", "name": "Español", "path": "lang/es.json" },
+    { "lang": "en", "name": "English", "path": "lang/en.json" }
+  ],
+  "relationships": {
+    "systems": [{ "id": "zweihander", "type": "system", "compatibility": {} }]
+  }
+}
