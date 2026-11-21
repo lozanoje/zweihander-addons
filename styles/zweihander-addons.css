@@ -1,6 +1,9 @@
 /* El <li> puede partirse en líneas: la fila va en la segunda, a todo el ancho. */
 li.combatant.zwh-has-row {
   flex-wrap: wrap;
+  row-gap: 0;
+  /* Sube la fila de targets y armas hacia la de iconos (más negativo = más junto) */
+  --zwh-row-offset: -10px;
 }
 li.combatant.zwh-has-row > .token-name {
   flex: 1 1 0;
@@ -14,7 +17,7 @@ li.combatant.zwh-has-row > .token-name {
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
-  margin-top: 2px;
+  margin-top: var(--zwh-row-offset, -10px);
 }
 
 .zwh-addons .zwh-icon {
