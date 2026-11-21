@@ -13,5 +13,8 @@ Añade al Combat Tracker, justo debajo de los iconos de cada contendiente, **una
   Al pulsar se abre el diálogo de tirada del sistema. Por defecto solo los propietarios del actor las ven; el ajuste «Armas solo para propietarios» permite mostrarlas a todos (los no propietarios las ven desactivadas).
 - **Arrastrar y soltar:** se pueden arrastrar ataques sobre otros contendientes del asistente de combate
 
+Añade a las tarjetas de ataque y daño el icono del objetivo
+
 ## Instalación
-Descomprimir en `Data/modules/zweihander-addons` y activar el módulo en el mundo.
+
+Instala con este manifiesto: ```https://raw.githubusercontent.com/lozanoje/zweihander-addons/main/module.json```
