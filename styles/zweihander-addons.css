@@ -327,3 +327,32 @@ li.combatant.zwh-has-tracks > .token-initiative {
 .zwh-marker-skull {
   color: var(--zh-clr-red-bright, #fb4934);
 }
+
+/* Resultado de parar/esquivar: el fondo del botón usa los colores del resultado del ataque */
+.zwh-addons button.zwh-btn[class*="zwh-result-"] {
+  color: var(--zh-clr-fg0, #fbf1c7);
+}
+.zwh-addons button.zwh-btn.zwh-result-0,
+.zwh-addons button.zwh-btn.zwh-result-0:hover:not(:disabled) {
+  background: var(--zh-clr-red-alt, #cc241d);
+  border-color: var(--zh-clr-red, #fb4934) !important;
+}
+.zwh-addons button.zwh-btn.zwh-result-1,
+.zwh-addons button.zwh-btn.zwh-result-1:hover:not(:disabled) {
+  background: var(--zh-clr-orange-alt, #d65d0e);
+  border-color: var(--zh-clr-orange, #fe8019) !important;
+}
+.zwh-addons button.zwh-btn.zwh-result-2,
+.zwh-addons button.zwh-btn.zwh-result-2:hover:not(:disabled) {
+  background: var(--zh-clr-aqua-alt, #689d6a);
+  border-color: var(--zh-clr-aqua, #8ec07c) !important;
+}
+.zwh-addons button.zwh-btn.zwh-result-3,
+.zwh-addons button.zwh-btn.zwh-result-3:hover:not(:disabled) {
+  background: var(--zh-clr-green-alt, #98971a);
+  border-color: var(--zh-clr-green, #b8bb26) !important;
+}
+.zwh-addons button.zwh-btn[class*="zwh-result-"] i,
+.zwh-addons button.zwh-btn[class*="zwh-result-"]:hover:not(:disabled) i {
+  color: inherit;
+}

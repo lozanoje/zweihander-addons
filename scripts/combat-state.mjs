@@ -1,3 +1,6 @@
+import { ATTACK_TARGETS_FLAG } from "./chat-target.mjs";
+import { MODULE_ID } from "./targets.mjs";
+
 /**
  * Estado local (por cliente) de las filas de combate del tracker:
  *  - visible: si las filas 2, 3 y 4 de un combatiente se muestran (botón espada). Por defecto, ocultas.
@@ -9,6 +12,8 @@
 const visible = new Map();
 const attackMsg = new Map();
 const damageMsg = new Map();
+/** Resultado de parar/esquivar por tarjeta de ataque: id de la tarjeta -> { parry?, dodge? } (0 pifia ... 3 crítico). */
+const reactions = new Map();
 let activeCombatantId = null;
 
 export const isVisible = (combatantId) => visible.get(combatantId) === true;
@@ -18,6 +23,9 @@ export function toggleVisible(combatantId) {
   visible.set(combatantId, next);
   return next;
 }
+
+/** Resultado (0 pifia, 1 fallo, 2 éxito, 3 crítico) de la parada o esquiva contra esa tarjeta de ataque, si se ha tirado. */
+export const reactionOutcome = (attackMessageId, kind) => reactions.get(attackMessageId)?.[kind];
 
 /** Mensajes ya borrados del chat se consideran inexistentes. */
 export const attackMessageOf = (combatantId) => game.messages.get(attackMsg.get(combatantId));
@@ -30,6 +38,7 @@ export function resetCombatState() {
   visible.clear();
   attackMsg.clear();
   damageMsg.clear();
+  reactions.clear();
   activeCombatantId = game.combat?.combatant?.id ?? null;
 }
 
@@ -41,6 +50,7 @@ export function advanceTurn(nextCombatantId) {
   if (nextCombatantId === activeCombatantId) return false;
   if (activeCombatantId) visible.set(activeCombatantId, false);
   if (nextCombatantId) {
+    reactions.delete(attackMsg.get(nextCombatantId));
     attackMsg.delete(nextCombatantId);
     damageMsg.delete(nextCombatantId);
     visible.set(nextCombatantId, true);
@@ -74,12 +84,39 @@ export function recordMessage(message, combat) {
   return found;
 }
 
+/** UUID del actor del primer objetivo guardado en una tarjeta de ataque. */
+function firstTargetActorUuid(attackMessage) {
+  const first = attackMessage.getFlag(MODULE_ID, ATTACK_TARGETS_FLAG)?.[0];
+  return first ? fromUuidSync(first.uuid)?.actor?.uuid : undefined;
+}
+
+/**
+ * Anota el resultado de una parada o esquiva en la tarjeta de ataque más reciente cuyo primer
+ * objetivo es el actor que ha tirado. Sirve igual si se tira desde el tracker, desde la tarjeta
+ * de chat o con "Volver a tirar". Devuelve true si lo anotó.
+ */
+export function recordReaction(message) {
+  const data = message.flags?.zweihander?.skillTestData;
+  if (!data || !["parry", "dodge"].includes(data.testType)) return false;
+
+  const candidates = [...attackMsg.values()]
+    .map((id) => game.messages.get(id))
+    .filter((m) => m && firstTargetActorUuid(m) === data.actorUuid);
+  if (!candidates.length) return false;
+
+  const latest = candidates.reduce((a, b) => ((b.timestamp ?? 0) >= (a.timestamp ?? 0) ? b : a));
+  reactions.set(latest.id, { ...reactions.get(latest.id), [data.testType]: data.outcome });
+  return true;
+}
+
 /** @param {() => void} onChange Se llama cuando hay que volver a pintar el tracker. */
 export function registerCombatState(onChange) {
   activeCombatantId = game.combat?.combatant?.id ?? null;
 
   Hooks.on("createChatMessage", (message) => {
-    if (recordMessage(message, game.combat)) onChange();
+    const recorded = recordMessage(message, game.combat);
+    const reacted = recordReaction(message);
+    if (recorded || reacted) onChange();
   });
 
   // Al editar (explotar, aplicar daño) o borrar una tarjeta seguida, o al (re)pintarla en el chat

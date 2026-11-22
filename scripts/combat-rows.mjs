@@ -1,5 +1,5 @@
 import { ATTACK_TARGETS_FLAG } from "./chat-target.mjs";
-import { attackMessageOf, damageMessageOf } from "./combat-state.mjs";
+import { attackMessageOf, damageMessageOf, reactionOutcome } from "./combat-state.mjs";
 import { canSeeStatus } from "./permissions.mjs";
 import { MODULE_ID, setCanvasTargets } from "./targets.mjs";
 
@@ -44,10 +44,12 @@ const chatButton = (messageId, selector) =>
  * acción del sistema (y su aviso de puntos de acción). Se muestra desactivado cuando el
  * botón de la tarjeta lo está (permisos, daño ya aplicado, etc.).
  */
-function proxyButton({ messageId, selector, icon, labelKey, before }) {
+function proxyButton({ messageId, selector, icon, labelKey, before, result }) {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "zwh-btn inline-control";
+  // Resultado de la tirada (parar/esquivar): el fondo toma el color del resultado del ataque.
+  if (typeof result === "number") btn.classList.add(`zwh-result-${result}`);
 
   const i = document.createElement("i");
   i.className = icon;
@@ -117,11 +119,11 @@ export function buildAttackLine(combatant) {
     line.append(
       proxyButton({
         messageId, selector: ".skill-test-parry", icon: "ra ra-round-shield", labelKey: "ZWH_ADDONS.Row.Parry",
-        before: () => controlAttackTarget(message)
+        before: () => controlAttackTarget(message), result: reactionOutcome(messageId, "parry")
       }),
       proxyButton({
         messageId, selector: ".skill-test-dodge", icon: "ra ra-player-dodge", labelKey: "ZWH_ADDONS.Row.Dodge",
-        before: () => controlAttackTarget(message)
+        before: () => controlAttackTarget(message), result: reactionOutcome(messageId, "dodge")
       }),
       proxyButton({
         messageId, selector: ".skill-test-damage", icon: "ra ra-sword", labelKey: "ZWH_ADDONS.Row.Damage",
