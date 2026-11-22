@@ -28,6 +28,17 @@
       "Yes": "Yes",
       "No": "No",
       "Label": "Action points"
+    },
+    "Combat": "Combat",
+    "Row": {
+      "Repeat": "Repeat",
+      "Parry": "Parry",
+      "Dodge": "Dodge",
+      "Damage": "Damage",
+      "Explode": "Explode",
+      "Apply": "Apply",
+      "Unavailable": "This action is not available right now.",
+      "Threshold": "Damage threshold"
     }
   }
 }

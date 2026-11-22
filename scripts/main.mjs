@@ -5,6 +5,7 @@ import { registerCanvasDrop } from "./drag-drop.mjs";
 import { registerSpendOnRoll } from "./action-points.mjs";
 import { registerReactionCost } from "./ap-reactions.mjs";
 import { registerMovementCost } from "./ap-movement.mjs";
+import { registerCombatState } from "./combat-state.mjs";
 
 Hooks.once("init", () => {
   game.settings.register(MODULE_ID, "nameMaxLength", {
@@ -55,6 +56,7 @@ Hooks.once("ready", () => {
   registerSpendOnRoll();
   registerReactionCost();
   registerMovementCost();
+  registerCombatState(refreshTracker);
 });
 
 Hooks.on("renderCombatTracker", onRenderCombatTracker);

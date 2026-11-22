@@ -1,6 +1,9 @@
 import { MODULE_ID, getTargetIds, tokenImage } from "./targets.mjs";
 import { rollWeaponAttack } from "./weapon-roll.mjs";
 import { makeWeaponDraggable, registerDropTarget } from "./drag-drop.mjs";
+import { canSeeStatus } from "./permissions.mjs";
+import { isVisible, toggleVisible } from "./combat-state.mjs";
+import { buildAttackLine, buildDamageLine } from "./combat-rows.mjs";
 
 /**
  * Armas que se muestran como botones:
@@ -33,7 +36,7 @@ export function onRenderCombatTracker(app, html) {
   if (!root || !combat) return;
 
   root.querySelectorAll("li.combatant[data-combatant-id]").forEach((li) => {
-    li.querySelectorAll(".zwh-addons, .zwh-tracks").forEach((el) => el.remove());
+    li.querySelectorAll(".zwh-addons, .zwh-tracks, .zwh-combat-toggle").forEach((el) => el.remove());
     li.classList.remove("zwh-has-row", "zwh-has-tracks");
 
     const combatant = combat.combatants.get(li.dataset.combatantId);
@@ -41,6 +44,9 @@ export function onRenderCombatTracker(app, html) {
 
     // Cualquier combatiente puede recibir un arma arrastrada como objetivo.
     registerDropTarget(li, app);
+
+    // Botón espada (Combate): muestra/oculta las filas 2, 3 y 4.
+    addCombatToggle(li, combatant);
 
     // Marcadores de daño y estrés, arriba a la derecha.
     const tracks = canSeeStatus(combatant.actor) ? buildTracks(combatant.actor) : null;
@@ -96,15 +102,50 @@ function alignRow(li, row) {
   lead.style.marginRight = `${offset - width}px`;
 }
 
-/* Fila única: [PA bajo el retrato] [diana] [targets] [espadas] [armas] */
+/**
+ * Botón "Combate" (espada) justo después de "Resaltar ficha" en la primera fila.
+ * Cada clic muestra u oculta el marco con las filas 2, 3 y 4.
+ */
+function addCombatToggle(li, combatant) {
+  const controls = li.querySelector(".combatant-controls");
+  if (!controls) return;
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "inline-control combatant-control icon fa-solid fa-swords zwh-combat-toggle";
+  btn.classList.toggle("active", isVisible(combatant.id));
+  btn.dataset.tooltip = game.i18n.localize("ZWH_ADDONS.Combat");
+  btn.setAttribute("aria-label", game.i18n.localize("ZWH_ADDONS.Combat"));
+
+  btn.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    const shown = toggleVisible(combatant.id);
+    btn.classList.toggle("active", shown);
+    li.querySelector(".zwh-combat")?.classList.toggle("zwh-collapsed", !shown);
+    // La fila vacía (sin PA ni marco visible) se oculta por CSS; el alto del <li> cambia solo.
+  });
+
+  const anchor =
+    controls.querySelector('[data-action="pingCombatant"]') ??
+    controls.querySelector('[data-action="toggleDefeated"]');
+  if (anchor) anchor.after(btn);
+  else controls.prepend(btn);
+}
+
+/**
+ * Segunda línea del combatiente: [PA bajo el retrato] [marco gris con las filas 2, 3 y 4].
+ *   fila 2: [diana] [targets] [espadas] [armas]
+ *   fila 3: resultado de su último ataque y botones (solo si hay tarjeta de ataque)
+ *   fila 4: último daño, marcador y botones (solo si hay tarjeta de daño)
+ */
 function buildRow(combatant, combat) {
   const row = document.createElement("div");
   row.className = "zwh-addons zwh-row";
 
-  const targets = buildTargets(combatant, combat);
-  const weapons = buildWeapons(combatant);
   const ap = canSeeStatus(combatant.actor) ? buildActionPoints(combatant.actor) : null;
-  if (!targets.length && !weapons.length && !ap) return null;
+
+  const lines = [buildTargetsLine(combatant, combat), buildAttackLine(combatant), buildDamageLine(combatant)].filter(Boolean);
+  if (!ap && !lines.length) return null;
 
   if (ap) {
     const lead = document.createElement("div");
@@ -113,14 +154,31 @@ function buildRow(combatant, combat) {
     row.append(lead);
   }
 
+  if (lines.length) {
+    const frame = document.createElement("div");
+    frame.className = "zwh-combat";
+    frame.classList.toggle("zwh-collapsed", !isVisible(combatant.id));
+    frame.append(...lines);
+    row.append(frame);
+  }
+  return row;
+}
+
+/** Fila 2: objetivos y armas. */
+function buildTargetsLine(combatant, combat) {
+  const targets = buildTargets(combatant, combat);
+  const weapons = buildWeapons(combatant);
+  if (!targets.length && !weapons.length) return null;
+
+  const line = document.createElement("div");
+  line.className = "zwh-line zwh-line-targets";
   if (targets.length) {
-    row.append(icon("fa-solid fa-bullseye", "ZWH_ADDONS.Targets"), ...targets);
+    line.append(icon("fa-solid fa-bullseye", "ZWH_ADDONS.Targets"), ...targets);
   }
   if (weapons.length) {
-    row.append(icon("fa-solid fa-swords", "ZWH_ADDONS.Weapons"), ...weapons);
+    line.append(icon("fa-solid fa-swords", "ZWH_ADDONS.Weapons"), ...weapons);
   }
-
-  return row;
+  return line;
 }
 
 function icon(classes, tooltipKey) {
@@ -197,12 +255,6 @@ function buildWeapons(combatant) {
 }
 
 /* ---------------- Puntos de acción, daño y estrés ---------------- */
-
-/**
- * Estos datos solo se muestran a quien al menos observa al actor (el GM siempre),
- * para no revelar a los jugadores el estado de los PNJ.
- */
-const canSeeStatus = (actor) => !!actor && actor.testUserPermission(game.user, "OBSERVER");
 
 /** Claves de ZWEI.damageOptions / perilOptions / altPerilOptions (config.js del sistema). */
 const DAMAGE_KEYS = ["slain", "grievously", "seriously", "moderately", "lightly", "unharmed"];

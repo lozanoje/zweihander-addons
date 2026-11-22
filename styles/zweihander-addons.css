@@ -15,7 +15,7 @@ li.combatant.zwh-has-row > .token-name {
   flex: 1 1 100%;
   min-width: 0;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start; /* los PA quedan pegados bajo el retrato aunque el marco sea alto */
   gap: 4px;
   margin-top: var(--zwh-row-offset, -10px);
 }
@@ -207,4 +207,120 @@ li.combatant.zwh-has-tracks > .token-initiative {
 .zwh-tracks .zwh-box--danger {
   border-color: var(--zwh-track-danger);
   background: var(--zwh-track-danger);
+}
+
+/* ---------------------------------------------------------------- */
+/*  Marco de combate (filas 2, 3 y 4) y botón espada                  */
+/* ---------------------------------------------------------------- */
+
+/* Sin PA ni marco visible, la segunda línea no ocupa sitio. */
+.zwh-addons.zwh-row:not(:has(.zwh-ap-lead, .zwh-combat:not(.zwh-collapsed))) {
+  display: none;
+}
+
+/* Botón espada (Combate) de la primera fila: resaltado cuando las filas están visibles. */
+.zwh-combat-toggle.active {
+  color: var(--zh-clr-aqua, #689d6a);
+}
+
+/* Cuadrado gris como el de los botones de las tarjetas de chat */
+.zwh-combat {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 4px 6px;
+  border-radius: 5px;
+  background-color: var(--zh-clr-bg2, #3c3836);
+}
+.zwh-combat.zwh-collapsed {
+  display: none;
+}
+.zwh-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Resultado del ataque: mismos colores que la tarjeta de chat */
+.zwh-outcome {
+  padding: 0 8px;
+  border: 2px solid;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--zh-clr-fg0, #fbf1c7);
+}
+.zwh-outcome-0 {
+  background-color: var(--zh-clr-red-alt, #cc241d);
+  border-color: var(--zh-clr-red, #fb4934);
+}
+.zwh-outcome-1 {
+  background-color: var(--zh-clr-orange-alt, #d65d0e);
+  border-color: var(--zh-clr-orange, #fe8019);
+}
+.zwh-outcome-2 {
+  background-color: var(--zh-clr-aqua-alt, #689d6a);
+  border-color: var(--zh-clr-aqua, #8ec07c);
+}
+.zwh-outcome-3 {
+  background-color: var(--zh-clr-green-alt, #98971a);
+  border-color: var(--zh-clr-green, #b8bb26);
+}
+
+/* Botones de las filas 3 y 4 (como los de las tarjetas de chat) */
+.zwh-addons button.zwh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0;
+  padding: 1px 6px !important;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--zh-clr-fg1, #ebdbb2);
+  background: var(--zh-clr-bg1, #32302f);
+  border: 2px solid transparent !important;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.zwh-addons button.zwh-btn:hover:not(:disabled) {
+  background: var(--zh-clr-bg3, #504945);
+  border-color: var(--zh-clr-bg4, #665c54) !important;
+}
+.zwh-addons button.zwh-btn:hover:not(:disabled) i {
+  color: var(--zh-clr-yellow, #d79921);
+}
+.zwh-addons button.zwh-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Fila 4: daño y marcador */
+.zwh-damage-icon {
+  font-size: 0.8rem;
+  color: var(--zh-clr-fg2, #d5c4a1);
+}
+.zwh-damage-total {
+  min-width: 1.2em;
+  font-size: 0.9rem;
+}
+.zwh-marker {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.8rem;
+}
+.zwh-marker-heart {
+  color: var(--zh-clr-green-bright, #b8bb26);
+}
+.zwh-marker-drops,
+.zwh-marker-skull {
+  color: var(--zh-clr-red-bright, #fb4934);
 }

@@ -79,6 +79,12 @@ async function syncTargets() {
   );
 }
 
+/** Pone exactamente estos tokens (ids de TokenDocument de la escena actual) como targets del usuario. */
+export function setCanvasTargets(ids) {
+  const valid = ids.filter((id) => canvas.tokens?.get(id));
+  withoutSync(() => applyTargets(valid));
+}
+
 /** Ejecuta fn sin que los cambios de target que provoca se copien a los flags. */
 function withoutSync(fn) {
   suppressSync = true;

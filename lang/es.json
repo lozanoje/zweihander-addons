@@ -28,6 +28,17 @@
       "Yes": "Sí",
       "No": "No",
       "Label": "Puntos de acción"
+    },
+    "Combat": "Combate",
+    "Row": {
+      "Repeat": "Repetir",
+      "Parry": "Parar",
+      "Dodge": "Esquivar",
+      "Damage": "Daño",
+      "Explode": "Explotar",
+      "Apply": "Aplicar",
+      "Unavailable": "Esta acción no está disponible ahora mismo.",
+      "Threshold": "Umbral de daño"
     }
   }
 }
