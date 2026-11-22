@@ -26,7 +26,8 @@
       "Title": "Aviso puntos de acción",
       "NotEnough": "No dispone de suficientes puntos de acción, ¿desea continuar?",
       "Yes": "Sí",
-      "No": "No"
+      "No": "No",
+      "Label": "Puntos de acción"
     }
   }
 }

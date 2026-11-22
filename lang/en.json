@@ -26,7 +26,8 @@
       "Title": "Action points warning",
       "NotEnough": "You do not have enough action points. Do you want to continue?",
       "Yes": "Yes",
-      "No": "No"
+      "No": "No",
+      "Label": "Action points"
     }
   }
 }

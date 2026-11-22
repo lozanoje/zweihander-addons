@@ -68,7 +68,14 @@ const refreshTracker = foundry.utils.debounce(() => {
 Hooks.on("updateToken", (doc, changes) => {
   const moved = ["x", "y", "width", "height"].some((k) => k in changes);
   const retargeted = changes.flags?.[MODULE_ID] !== undefined;
-  if (moved || retargeted) refreshTracker();
+  // Actores sin vincular: sus estadísticas cambian a través del delta del token.
+  const statsChanged = foundry.utils.hasProperty(changes, "delta.system.stats");
+  if (moved || retargeted || statsChanged) refreshTracker();
+});
+
+// Puntos de acción, daño y estrés.
+Hooks.on("updateActor", (actor, changes) => {
+  if (foundry.utils.hasProperty(changes, "system.stats")) refreshTracker();
 });
 Hooks.on("deleteToken", refreshTracker);
 Hooks.on("canvasReady", refreshTracker);

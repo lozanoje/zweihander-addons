@@ -118,3 +118,87 @@ li.combatant.zwh-drop-hover {
   color: #fff;
   background: var(--zh-clr-aqua, #689d6a);
 }
+
+/* Puntos de acción, daño y estrés */
+.zwh-addons {
+  --zwh-ap-yellow: var(--zh-clr-yellow-bright, #fabd2f);
+  --zwh-track-green: var(--zh-clr-aqua, #689d6a);
+}
+
+.zwh-box {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--zh-clr-bright4, #a89984);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Puntos de acción */
+.zwh-ap {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.4);
+}
+.zwh-box--ap {
+  width: 12px;
+  height: 12px;
+}
+.zwh-box--ap.on {
+  border-color: var(--zwh-ap-yellow);
+  background: var(--zwh-ap-yellow);
+}
+.zwh-ap-lead {
+  display: flex;
+  flex: none;
+  justify-content: center;
+}
+
+/* Daño y estrés: esquina superior derecha del combatiente */
+li.combatant.zwh-has-tracks {
+  position: relative;
+}
+/* Los valores de la derecha (recurso e iniciativa) bajan para dejar sitio a los marcadores. */
+li.combatant.zwh-has-tracks > .token-resource,
+li.combatant.zwh-has-tracks > .token-initiative {
+  padding-top: 16px;
+}
+.zwh-tracks {
+  --zwh-track-green: var(--zh-clr-aqua, #689d6a);
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 2px 4px;
+  border-bottom-left-radius: 6px;
+  background: rgba(0, 0, 0, 0.45);
+}
+.zwh-track {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.zwh-track-icon {
+  width: 11px;
+  margin-right: 2px;
+  font-size: 0.6rem;
+  line-height: 1;
+  text-align: center;
+  color: var(--zh-clr-bright2, #d5c4a1);
+}
+.zwh-tracks .zwh-box {
+  width: 7px;
+  height: 7px;
+  border-radius: 1px;
+}
+.zwh-tracks .zwh-box.on {
+  border-color: var(--zwh-track-green);
+  background: var(--zwh-track-green);
+}
