@@ -1,6 +1,6 @@
 import { MODULE_ID, tokenImage } from "./targets.mjs";
 
-const FLAG = "attackTargets";
+export const ATTACK_TARGETS_FLAG = "attackTargets";
 
 /**
  * Objetivo del ataque en los mensajes de chat del arma (tirada de ataque y daño).
@@ -23,14 +23,14 @@ export function registerChatTarget() {
       img: tokenImage(t.document)
     }));
     if (!targets.length) return;
-    message.updateSource({ [`flags.${MODULE_ID}.${FLAG}`]: targets });
+    message.updateSource({ [`flags.${MODULE_ID}.${ATTACK_TARGETS_FLAG}`]: targets });
   });
 
   Hooks.on("renderChatMessageHTML", onRenderChatMessage);
 }
 
 function onRenderChatMessage(message, html) {
-  const targets = message.getFlag(MODULE_ID, FLAG);
+  const targets = message.getFlag(MODULE_ID, ATTACK_TARGETS_FLAG);
   if (!targets?.length) return;
 
   const root = html instanceof HTMLElement ? html : html[0];

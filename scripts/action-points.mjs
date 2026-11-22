@@ -16,8 +16,14 @@ export function dbg(...args) {
 /** Tiempo máximo (ms) que un gasto previsto espera a que se cree su tirada. */
 const EXPECT_TTL = 2 * 60 * 1000;
 
-/** Gastos previstos: "<uuid del actor>|<tipo>" -> { cost, until }. */
+/** Gastos previstos de ataque: "<uuid del actor>|weapon" -> { cost, until }. */
 const expected = new Map();
+
+/**
+ * Reacción (esquivar/parar) en curso: la tira quien esté seleccionado (rollers) pero
+ * el PA lo paga el objetivo del ataque (payer). Solo hay una a la vez por cliente.
+ */
+let pendingReaction = null;
 
 export const apOf = (actor) => actor?.system?.stats?.actionPoints ?? null;
 
@@ -64,7 +70,13 @@ export async function spendAP(actor, cost) {
   const ap = apOf(actor);
   if (!ap || cost <= 0) return;
   const value = Math.max(0, ap.value - cost);
-  if (value !== ap.value) await actor.update({ "system.stats.actionPoints.value": value });
+  if (value === ap.value) return;
+  try {
+    await actor.update({ "system.stats.actionPoints.value": value });
+  } catch (err) {
+    // Típicamente: este usuario no tiene permiso para modificar a ese actor.
+    console.warn(`zweihander-addons | no se pudieron restar los PA de ${actor.name}`, err);
+  }
 }
 
 /** Anota que cuando se cree la próxima tirada de ese tipo del actor hay que restar PA. */
@@ -77,6 +89,26 @@ export function clearExpected(actor, kind) {
 }
 
 /**
+ * Anota una reacción: cuando se cree la tirada de esquivar/parar de alguno de los
+ * `rollerUuids`, se resta `cost` PA a `payer` (el objetivo del ataque).
+ */
+export function expectReaction(payer, rollerUuids, cost = 1) {
+  pendingReaction = { payer, rollers: new Set(rollerUuids), cost, until: Date.now() + EXPECT_TTL };
+}
+
+/** Descarta una reacción anotada que no llegó a tirarse (diálogo cancelado). */
+export function clearReaction() {
+  pendingReaction = null;
+}
+
+function chargeReaction(rollerUuid) {
+  const r = pendingReaction;
+  if (!r || r.until < Date.now() || !r.rollers.has(rollerUuid)) return;
+  pendingReaction = null;
+  spendAP(r.payer, r.cost);
+}
+
+/**
  * Cobra los gastos anotados en cuanto el sistema crea el mensaje de la tirada
  * (ataque con arma, esquivar o parar). Si el diálogo de tirada se cancela, no se cobra nada.
  */
@@ -86,11 +118,14 @@ export function registerSpendOnRoll() {
     const data = message.flags?.zweihander?.skillTestData;
     if (!data) return;
 
-    const kind =
-      data.testType === "weapon" ? "weapon" : ["dodge", "parry"].includes(data.testType) ? "reaction" : null;
-    if (!kind) return;
+    // Esquivar/parar: paga el objetivo del ataque, no quien tira (ver expectReaction).
+    if (["dodge", "parry"].includes(data.testType)) {
+      chargeReaction(data.actorUuid);
+      return;
+    }
+    if (data.testType !== "weapon") return;
 
-    const key = `${data.actorUuid}|${kind}`;
+    const key = `${data.actorUuid}|weapon`;
     const entry = expected.get(key);
     if (!entry) return;
     expected.delete(key);
