@@ -1,7 +1,7 @@
 {
   "ZWH_ADDONS": {
     "Targets": "Objetivos",
-    "Weapons": "Armas equipadas",
+    "Weapons": "Armas",
     "Settings": {
       "NameMaxLength": {
         "Name": "Longitud máxima del nombre del arma",

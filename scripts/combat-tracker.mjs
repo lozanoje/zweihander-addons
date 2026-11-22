@@ -2,8 +2,18 @@ import { MODULE_ID, getTargetIds, tokenImage } from "./targets.mjs";
 import { rollWeaponAttack } from "./weapon-roll.mjs";
 import { makeWeaponDraggable, registerDropTarget } from "./drag-drop.mjs";
 
-const isEquippedWeapon = (item) =>
-  item.type === "weapon" && item.system?.equipped === true;
+/**
+ * Armas que se muestran como botones:
+ * - "character": solo las equipadas (system.equipped === true).
+ * - Resto de tipos ("npc", "creature"): no tienen la etiqueta equipped, así que
+ *   se muestran todos sus items de tipo "weapon".
+ */
+export function listedWeapons(actor) {
+  const weapons = actor.items.filter((item) => item.type === "weapon");
+  return actor.type === "character"
+    ? weapons.filter((item) => item.system?.equipped === true)
+    : weapons;
+}
 
 const truncate = (text, max) =>
   text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
@@ -127,7 +137,7 @@ function buildTargets(combatant, combat) {
   return entries;
 }
 
-/* ---------------- Armas equipadas ---------------- */
+/* ---------------- Armas ---------------- */
 
 function buildWeapons(combatant) {
   const actor = combatant.actor;
@@ -140,7 +150,7 @@ function buildWeapons(combatant) {
   if (ownersOnly && !isOwner) return [];
 
   const max = game.settings.get(MODULE_ID, "nameMaxLength");
-  return actor.items.filter(isEquippedWeapon).map((weapon) => {
+  return listedWeapons(actor).map((weapon) => {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "zwh-weapon inline-control";
