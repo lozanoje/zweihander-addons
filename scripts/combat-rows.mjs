@@ -32,6 +32,9 @@ export function damageMarker(total, threshold) {
 /*  Botones que activan los de la tarjeta de chat                    */
 /* ---------------------------------------------------------------- */
 
+/** Corta el texto de los botones al máximo de caracteres del ajuste (sin puntos suspensivos). */
+const shorten = (text) => text.slice(0, game.settings.get(MODULE_ID, "buttonMaxLength"));
+
 /** Botón de la tarjeta de chat (el sistema engancha sus acciones a esos botones). */
 const chatButton = (messageId, selector) =>
   document.querySelector(`.chat-message[data-message-id="${messageId}"] ${selector}`);
@@ -49,7 +52,9 @@ function proxyButton({ messageId, selector, icon, labelKey, before }) {
   const i = document.createElement("i");
   i.className = icon;
   const label = document.createElement("span");
-  label.textContent = game.i18n.localize(labelKey);
+  const fullText = game.i18n.localize(labelKey);
+  label.textContent = shorten(fullText);
+  btn.dataset.tooltip = fullText;
   btn.append(i, label);
 
   const source = chatButton(messageId, selector);

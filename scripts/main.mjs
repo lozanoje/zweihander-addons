@@ -19,6 +19,17 @@ Hooks.once("init", () => {
     onChange: () => refreshTracker()
   });
 
+  game.settings.register(MODULE_ID, "buttonMaxLength", {
+    name: "ZWH_ADDONS.Settings.ButtonMaxLength.Name",
+    hint: "ZWH_ADDONS.Settings.ButtonMaxLength.Hint",
+    scope: "client",
+    config: true,
+    type: Number,
+    default: 6,
+    range: { min: 3, max: 12, step: 1 },
+    onChange: () => refreshTracker()
+  });
+
   game.settings.register(MODULE_ID, "canvasFollowsSelection", {
     name: "ZWH_ADDONS.Settings.CanvasFollowsSelection.Name",
     hint: "ZWH_ADDONS.Settings.CanvasFollowsSelection.Hint",

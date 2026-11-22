@@ -241,15 +241,15 @@ li.combatant.zwh-has-tracks > .token-initiative {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 /* Resultado del ataque: mismos colores que la tarjeta de chat */
 .zwh-outcome {
-  padding: 0 8px;
-  border: 2px solid;
+  padding: 0 4px;
+  border: 1px solid;
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   line-height: 1.5;
   color: var(--zh-clr-fg0, #fbf1c7);
@@ -275,20 +275,23 @@ li.combatant.zwh-has-tracks > .token-initiative {
 .zwh-addons button.zwh-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   width: auto !important;
   height: auto !important;
   min-height: 0 !important;
   margin: 0;
-  padding: 1px 6px !important;
-  font-size: 0.7rem;
+  padding: 1px 3px !important;
+  font-size: 0.62rem;
   line-height: 1.4;
   white-space: nowrap;
   color: var(--zh-clr-fg1, #ebdbb2);
   background: var(--zh-clr-bg1, #32302f);
-  border: 2px solid transparent !important;
+  border: 1px solid transparent !important;
   border-radius: 4px;
   cursor: pointer;
+}
+.zwh-addons button.zwh-btn i {
+  font-size: 0.56rem;
 }
 .zwh-addons button.zwh-btn:hover:not(:disabled) {
   background: var(--zh-clr-bg3, #504945);

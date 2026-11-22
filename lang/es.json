@@ -18,6 +18,10 @@
       "ApWarning": {
         "Name": "Aviso puntos de acción",
         "Hint": "Avisar cuando se usan más puntos de acción de los disponibles"
+      },
+      "ButtonMaxLength": {
+        "Name": "Longitud máxima de los botones",
+        "Hint": "Máximo de caracteres del texto de los botones Repetir, Parar, Esquivar, Daño, Explotar y Aplicar del asistente de combate. Los textos más largos se cortan (Aplicar con 6 queda «Aplica»); el nombre completo sale al pasar el ratón."
       }
     },
     "NoTokenOnCanvas": "No se puede poner como objetivo: el token no está en la escena que se está viendo.",

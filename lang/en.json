@@ -18,6 +18,10 @@
       "ApWarning": {
         "Name": "Action points warning",
         "Hint": "Warn when more action points are used than are available"
+      },
+      "ButtonMaxLength": {
+        "Name": "Maximum button length",
+        "Hint": "Maximum number of characters of the Repeat, Parry, Dodge, Damage, Explode and Apply button texts in the Combat Tracker. Longer texts are cut (Apply with 4 becomes “Appl”); the full name shows on hover."
       }
     },
     "NoTokenOnCanvas": "Cannot target: the token is not on the scene being viewed.",
