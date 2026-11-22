@@ -169,6 +169,7 @@ li.combatant.zwh-has-tracks > .token-initiative {
 }
 .zwh-tracks {
   --zwh-track-green: var(--zh-clr-aqua, #689d6a);
+  --zwh-track-danger: var(--zh-clr-orange-bright, #fe8019);
   position: absolute;
   top: 0;
   right: 0;
@@ -201,4 +202,9 @@ li.combatant.zwh-has-tracks > .token-initiative {
 .zwh-tracks .zwh-box.on {
   border-color: var(--zwh-track-green);
   background: var(--zwh-track-green);
+}
+/* 0 puntos: el primer cuadro se ilumina en naranja */
+.zwh-tracks .zwh-box--danger {
+  border-color: var(--zwh-track-danger);
+  background: var(--zwh-track-danger);
 }

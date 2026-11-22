@@ -230,7 +230,7 @@ function buildActionPoints(actor) {
   return el;
 }
 
-/** Daño (corazón) y estrés (ojo): un cuadrado por estado; los verdes son los niveles que quedan. */
+/** Daño (corazón) y estrés (ojo): un cuadrado por estado; los verdes son los niveles que quedan y el primero se pone naranja en 0. */
 function buildTracks(actor) {
   const sa = actor.system?.stats?.secondaryAttributes;
   if (!sa?.damageCurrent && !sa?.perilCurrent) return null;
@@ -258,7 +258,12 @@ function trackRow(iconClasses, current, keys, titleKey) {
   i.className = `${iconClasses} zwh-track-icon`;
   row.append(i);
 
-  // Posición 0 = el peor estado (abatido/incapacitado): nunca se pinta; 1..valor en verde.
-  for (let n = 0; n < keys.length; n++) row.append(box(n >= 1 && n <= value));
+  // Posición 0 = el peor estado (abatido/incapacitado): vacío mientras quede 1 o más,
+  // naranja cuando el valor llega a 0. Las posiciones 1..valor van en verde.
+  for (let n = 0; n < keys.length; n++) {
+    const el = box(n >= 1 && n <= value);
+    if (n === 0 && value === 0) el.classList.add("zwh-box--danger");
+    row.append(el);
+  }
   return row;
 }
