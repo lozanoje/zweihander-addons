@@ -12,7 +12,11 @@ import { MODULE_ID } from "./targets.mjs";
 const visible = new Map();
 const attackMsg = new Map();
 const damageMsg = new Map();
-/** Resultado de parar/esquivar por tarjeta de ataque: id de la tarjeta -> { parry?, dodge? } (0 pifia ... 3 crítico). */
+/**
+ * Última tirada de parar/esquivar contra cada tarjeta de ataque:
+ * id de la tarjeta de ataque -> { parry?: {outcome, messageId}, dodge?: {outcome, messageId} }
+ * (outcome: 0 pifia ... 3 crítico).
+ */
 const reactions = new Map();
 let activeCombatantId = null;
 
@@ -25,7 +29,13 @@ export function toggleVisible(combatantId) {
 }
 
 /** Resultado (0 pifia, 1 fallo, 2 éxito, 3 crítico) de la parada o esquiva contra esa tarjeta de ataque, si se ha tirado. */
-export const reactionOutcome = (attackMessageId, kind) => reactions.get(attackMessageId)?.[kind];
+export const reactionOutcome = (attackMessageId, kind) => reactions.get(attackMessageId)?.[kind]?.outcome;
+
+/** Tarjeta de chat de la última parada/esquiva contra esa tarjeta de ataque (si sigue en el chat). */
+export function reactionMessage(attackMessageId, kind) {
+  const id = reactions.get(attackMessageId)?.[kind]?.messageId;
+  return id ? game.messages.get(id) : undefined;
+}
 
 /** Mensajes ya borrados del chat se consideran inexistentes. */
 export const attackMessageOf = (combatantId) => game.messages.get(attackMsg.get(combatantId));
@@ -105,7 +115,10 @@ export function recordReaction(message) {
   if (!candidates.length) return false;
 
   const latest = candidates.reduce((a, b) => ((b.timestamp ?? 0) >= (a.timestamp ?? 0) ? b : a));
-  reactions.set(latest.id, { ...reactions.get(latest.id), [data.testType]: data.outcome });
+  reactions.set(latest.id, {
+    ...reactions.get(latest.id),
+    [data.testType]: { outcome: data.outcome, messageId: message.id }
+  });
   return true;
 }
 

@@ -1,5 +1,5 @@
 import { ATTACK_TARGETS_FLAG } from "./chat-target.mjs";
-import { attackMessageOf, damageMessageOf, reactionOutcome } from "./combat-state.mjs";
+import { attackMessageOf, damageMessageOf, reactionMessage, reactionOutcome } from "./combat-state.mjs";
 import { canSeeStatus } from "./permissions.mjs";
 import { MODULE_ID, setCanvasTargets } from "./targets.mjs";
 
@@ -44,7 +44,7 @@ const chatButton = (messageId, selector) =>
  * acción del sistema (y su aviso de puntos de acción). Se muestra desactivado cuando el
  * botón de la tarjeta lo está (permisos, daño ya aplicado, etc.).
  */
-function proxyButton({ messageId, selector, icon, labelKey, before, result }) {
+function proxyButton({ messageId, selector, icon, labelKey, before, result, reroll = false }) {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "zwh-btn inline-control";
@@ -56,7 +56,8 @@ function proxyButton({ messageId, selector, icon, labelKey, before, result }) {
   const label = document.createElement("span");
   const fullText = game.i18n.localize(labelKey);
   label.textContent = shorten(fullText);
-  btn.dataset.tooltip = fullText;
+  // Si es una repetición, el tooltip lo dice: usa fortuna igual que "Volver a tirar" del chat.
+  btn.dataset.tooltip = reroll ? `${fullText} · ${game.i18n.localize("ZWEI.chatskill.goreroll")}` : fullText;
   btn.append(i, label);
 
   const source = chatButton(messageId, selector);
@@ -91,6 +92,25 @@ function targetAttackTargets(message) {
   if (ids.length) setCanvasTargets(ids);
 }
 
+/**
+ * Parar / Esquivar. La primera vez tira la reacción (botón de la tarjeta de ataque, sobre el
+ * objetivo). Si ya se ha tirado, el botón pasa a ser el "Volver a tirar" de la tarjeta de esa
+ * tirada: así se comporta igual que en el chat (gasta fortuna o desgracia del Fortune Tracker y
+ * no tira si no queda, reutiliza la dificultad y solo abre el diálogo con Mayús) y no cuesta PA.
+ */
+function reactionButton(attackMessage, kind, icon, labelKey) {
+  const previous = reactionMessage(attackMessage.id, kind);
+  return previous
+    ? proxyButton({
+        messageId: previous.id, selector: ".skill-test-reroll", icon, labelKey,
+        result: reactionOutcome(attackMessage.id, kind), reroll: true
+      })
+    : proxyButton({
+        messageId: attackMessage.id, selector: `.skill-test-${kind}`, icon, labelKey,
+        before: () => controlAttackTarget(attackMessage)
+      });
+}
+
 /* ---------------------------------------------------------------- */
 /*  Fila 3: tarjeta de ataque                                        */
 /* ---------------------------------------------------------------- */
@@ -117,14 +137,8 @@ export function buildAttackLine(combatant) {
   }
   if (outcome >= SUCCESS) {
     line.append(
-      proxyButton({
-        messageId, selector: ".skill-test-parry", icon: "ra ra-round-shield", labelKey: "ZWH_ADDONS.Row.Parry",
-        before: () => controlAttackTarget(message), result: reactionOutcome(messageId, "parry")
-      }),
-      proxyButton({
-        messageId, selector: ".skill-test-dodge", icon: "ra ra-player-dodge", labelKey: "ZWH_ADDONS.Row.Dodge",
-        before: () => controlAttackTarget(message), result: reactionOutcome(messageId, "dodge")
-      }),
+      reactionButton(message, "parry", "ra ra-round-shield", "ZWH_ADDONS.Row.Parry"),
+      reactionButton(message, "dodge", "ra ra-player-dodge", "ZWH_ADDONS.Row.Dodge"),
       proxyButton({
         messageId, selector: ".skill-test-damage", icon: "ra ra-sword", labelKey: "ZWH_ADDONS.Row.Damage",
         before: () => targetAttackTargets(message)
