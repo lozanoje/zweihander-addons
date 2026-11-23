@@ -13,7 +13,7 @@
       },
       "CanvasFollowsSelection": {
         "Name": "Canvas targets follow the selected token",
-        "Hint": "When you select a token, the targets shown on the canvas become the ones stored for that token (the same ones the Combat Tracker shows). Disabled: the canvas does not change when selecting."
+        "Hint": "When you select a token or when its turn starts, the targets shown on the canvas become the ones stored for that token (the same ones the Combat Tracker shows). Disabled: the canvas does not change when selecting or when the turn changes."
       },
       "ApWarning": {
         "Name": "Action points warning",

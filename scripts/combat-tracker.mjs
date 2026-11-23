@@ -1,4 +1,4 @@
-import { MODULE_ID, getTargetIds, tokenImage } from "./targets.mjs";
+import { MODULE_ID, applyStoredTargets, getTargetIds, tokenImage } from "./targets.mjs";
 import { rollWeaponAttack } from "./weapon-roll.mjs";
 import { makeWeaponDraggable, registerDropTarget } from "./drag-drop.mjs";
 import { canSeeStatus } from "./permissions.mjs";
@@ -245,7 +245,10 @@ function buildWeapons(combatant) {
     btn.textContent = truncate(weapon.name, max);
     btn.dataset.tooltip = weapon.name;
     if (isOwner) {
-      btn.addEventListener("click", () => rollWeaponAttack(weapon));
+      // El ataque va contra los objetivos que muestra la fila del combatiente (los guardados en su token).
+      btn.addEventListener("click", () =>
+        rollWeaponAttack(weapon, { beforeRoll: () => applyStoredTargets(combatant.token) })
+      );
       makeWeaponDraggable(btn, weapon, combatant);
     } else {
       btn.disabled = true;

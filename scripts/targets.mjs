@@ -63,6 +63,12 @@ async function syncTargets() {
 
   let sources = canvas.tokens?.controlled ?? [];
   if (!sources.length && user.character) sources = user.character.getActiveTokens();
+  // Sin selección ni personaje en la escena: se guardan en el token al que le toca el turno,
+  // para que lo que se marca con T sea lo que muestra su fila y lo que usa su arma.
+  if (!sources.length) {
+    const active = game.combat?.started ? game.combat.combatant?.token?.object : null;
+    if (active) sources = [active];
+  }
 
   await Promise.all(
     sources
@@ -77,6 +83,22 @@ async function syncTargets() {
           : t.document.unsetFlag(MODULE_ID, TARGETS_FLAG);
       })
   );
+}
+
+/**
+ * Pone en el lienzo los objetivos guardados en un token, si tiene alguno en la escena que se ve.
+ * Sin objetivos guardados no toca nada (así, marcar con T y atacar sigue funcionando).
+ * @returns {boolean} true si cambió los targets del usuario.
+ */
+export function applyStoredTargets(tokenDoc) {
+  if (!tokenDoc || !canvas.ready || tokenDoc.parent?.id !== canvas.scene?.id) return false;
+  const wanted = getTargetIds(tokenDoc).filter((id) => canvas.tokens.get(id));
+  if (!wanted.length) return false;
+  const current = Array.from(game.user.targets, (t) => t.id);
+  const same = wanted.length === current.length && wanted.every((id) => current.includes(id));
+  if (same) return false;
+  setCanvasTargets(wanted);
+  return true;
 }
 
 /** Pone exactamente estos tokens (ids de TokenDocument de la escena actual) como targets del usuario. */

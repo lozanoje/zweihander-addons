@@ -1,5 +1,5 @@
 import { ATTACK_TARGETS_FLAG } from "./chat-target.mjs";
-import { MODULE_ID } from "./targets.mjs";
+import { MODULE_ID, applyStoredTargets } from "./targets.mjs";
 
 /**
  * Estado local (por cliente) de las filas de combate del tracker:
@@ -141,7 +141,13 @@ export function registerCombatState(onChange) {
   Hooks.on("updateCombat", (combat, changes) => {
     if (combat.id !== game.combat?.id) return;
     if (!("turn" in changes) && !("round" in changes)) return;
-    if (advanceTurn(combat.combatant?.id ?? null)) onChange();
+    if (!advanceTurn(combat.combatant?.id ?? null)) return;
+
+    // Al llegar su turno, los objetivos del lienzo pasan a ser los guardados en su token
+    // (solo para quien controla ese token, para no tocar los targets del resto de jugadores).
+    const token = combat.combatant?.token;
+    if (token?.isOwner && game.settings.get(MODULE_ID, "canvasFollowsSelection")) applyStoredTargets(token);
+    onChange();
   });
 
   Hooks.on("deleteCombat", () => {

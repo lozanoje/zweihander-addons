@@ -13,7 +13,7 @@
       },
       "CanvasFollowsSelection": {
         "Name": "Objetivos del lienzo según el token seleccionado",
-        "Hint": "Al seleccionar un token, los objetivos marcados en el lienzo pasan a ser los que ese token tiene guardados (los mismos que muestra el asistente de combate). Desactivado: el lienzo no cambia al seleccionar."
+        "Hint": "Al seleccionar un token o al llegar su turno, los objetivos marcados en el lienzo pasan a ser los que ese token tiene guardados (los mismos que muestra el asistente de combate). Desactivado: el lienzo no cambia al seleccionar ni al cambiar de turno."
       },
       "ApWarning": {
         "Name": "Aviso puntos de acción",
