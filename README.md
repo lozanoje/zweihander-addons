@@ -48,6 +48,22 @@ Necesita la tarjeta de chat. Las acciones funcionan si la tarjeta está pintada 
 Quién ve el marcador. El umbral solo se usa si el usuario puede observar al actor objetivo (el GM siempre), para no revelar el de los PNJ. Si no puede, no se muestra el marcador.
 Anchura. En una barra lateral estrecha, la fila 3 de un éxito parte en dos líneas (Repetir y Parar, luego Esquivar y Daño). Si quieres que quepa en una, puedo dejar solo iconos con tooltip.
 
+Qué hace ahora
+
+Si ya se tiró esa reacción contra el ataque, Parar o Esquivar pasa a pulsar el «Volver a tirar» de la tarjeta de esa tirada, así que se comporta igual que en el chat:
+
+gasta fortuna o desgracia y no tira si no queda;
+reutiliza la dificultad, y solo abre el diálogo con Mayús;
+no cuesta PA;
+queda desactivado cuando el chat no deja repetir (una pifia);
+el tooltip pasa a decir «Parar · Volver a tirar», y el botón conserva el color de su último resultado.
+
+La primera vez sigue siendo como antes (tira la reacción sobre el objetivo y cobra 1 PA). Si repites varias veces, el botón apunta siempre a la tarjeta de la tirada más reciente.
+
+Cosas a tener en cuenta
+Quién puede repetir. El sistema activa el «Volver a tirar» de una tarjeta para el GM o para quien controle a ese actor en el momento en que se pinta la tarjeta. Si un jugador no tenía seleccionado al defensor entonces, el botón saldrá desactivado en el tracker igual que en el chat.
+Tarjeta borrada. Si borras del chat la tarjeta de esa tirada, el botón vuelve a tirar de cero como la primera vez.
+
 ## Instalación
 
 Instala con este manifiesto: ```https://raw.githubusercontent.com/lozanoje/zweihander-addons/main/module.json```
