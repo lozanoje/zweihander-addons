@@ -48,7 +48,7 @@ export function onRenderCombatTracker(app, html) {
     // Botón espada (Combate): muestra/oculta las filas 2, 3 y 4.
     addCombatToggle(li, combatant);
 
-    // Marcadores de daño y estrés, arriba a la derecha.
+    // Marcadores de daño y estrés, en vertical a la derecha del retrato.
     const tracks = canSeeStatus(combatant.actor) ? buildTracks(combatant.actor) : null;
     if (tracks) {
       li.classList.add("zwh-has-tracks");
@@ -56,7 +56,10 @@ export function onRenderCombatTracker(app, html) {
     }
 
     const row = buildRow(combatant, combat);
-    if (!row) return;
+    if (!row) {
+      if (tracks) watchLayout(li, () => placeTracks(li));
+      return;
+    }
 
     // Evita que los clics activen el combatiente.
     for (const type of ["click", "dblclick", "pointerdown"]) {
@@ -66,40 +69,104 @@ export function onRenderCombatTracker(app, html) {
     li.classList.add("zwh-has-row");
     li.append(row);
 
-    // Sangría: alinear la fila con el bloque del nombre. Al abrir el mundo el tracker
-    // aún no tiene layout (pestaña oculta / imágenes sin cargar), así que se mide
-    // ahora y se vuelve a medir cada vez que cambia el tamaño del <li> o del retrato.
-    alignRow(li, row);
-    const observer = new ResizeObserver(() => alignRow(li, row));
-    observer.observe(li);
-    const img = li.querySelector(".token-image");
-    if (img) observer.observe(img);
+    // Alinear la fila con el bloque del nombre y colocar los marcadores. Al abrir el mundo el
+    // tracker aún no tiene layout (pestaña oculta / imágenes sin cargar), así que se mide ahora
+    // y se vuelve a medir cada vez que cambia el tamaño del <li> o del retrato.
+    watchLayout(li, () => alignRow(li, row));
   });
 }
 
+/** Ejecuta fn ahora y cada vez que cambie el tamaño del <li> o de su retrato. */
+function watchLayout(li, fn) {
+  fn();
+  const observer = new ResizeObserver(fn);
+  observer.observe(li);
+  const img = li.querySelector(".token-image");
+  if (img) observer.observe(img);
+}
+
 /**
- * Sitúa la fila bajo el nombre: la fila empieza donde empieza el nombre.
- * Si lleva los PA bajo el retrato, ese bloque ocupa el hueco del retrato (centrado bajo él)
- * y el resto de la fila arranca alineado con el nombre; si no, se usa un margen izquierdo.
+ * Coloca los elementos que dependen de la geometría real del combatiente:
+ *  - la segunda línea empieza donde empieza el nombre; los PA, si los hay, ocupan el hueco del
+ *    retrato (centrados bajo él) y el resto de la fila arranca alineado con el nombre;
+ *  - el marco llega hasta el borde derecho del combatiente (en algunos temas el contenido del
+ *    <li> termina antes de donde se ve el borde, y la fila se quedaba corta);
+ *  - el panel de daño y estrés queda justo a la derecha del retrato, en vertical.
  */
 function alignRow(li, row) {
   const name = li.querySelector(".token-name");
   if (!name || !row.isConnected) return;
+
+  // El panel de marcadores desplaza el nombre, así que va antes de medir.
+  placeTracks(li, row);
+
   const nameRect = name.getBoundingClientRect();
   if (!nameRect.width) return; // oculto: el observer reintentará al mostrarse
 
   row.style.marginLeft = "0px";
-  const offset = Math.max(0, nameRect.left - row.getBoundingClientRect().left);
+  row.style.marginRight = "0px";
+  const rowRect = row.getBoundingClientRect();
+  const offset = Math.max(0, nameRect.left - rowRect.left);
+
+  // Hasta el borde derecho visible del combatiente (menos un pequeño margen).
+  const liRect = li.getBoundingClientRect();
+  const edge = liRect.right - parseFloat(getComputedStyle(li).borderRightWidth || 0) - EDGE_GAP;
+  const extra = Math.round(edge - rowRect.right);
+  if (extra > 1) row.style.marginRight = `${-extra}px`;
 
   const lead = row.querySelector(":scope > .zwh-ap-lead");
   if (!lead) {
     row.style.marginLeft = `${offset}px`;
-    return;
+  } else {
+    const imgWidth = li.querySelector(".token-image")?.getBoundingClientRect().width || 0;
+    const width = imgWidth > 0 && imgWidth <= offset ? imgWidth : offset;
+    lead.style.width = `${width}px`;
+    lead.style.marginRight = `${offset - width}px`;
   }
-  const imgWidth = li.querySelector(".token-image")?.getBoundingClientRect().width || 0;
-  const width = imgWidth > 0 && imgWidth <= offset ? imgWidth : offset;
-  lead.style.width = `${width}px`;
-  lead.style.marginRight = `${offset - width}px`;
+}
+
+/** Margen (px) entre el final de las filas y el borde del combatiente. */
+const EDGE_GAP = 6;
+
+/** Separación (px) del panel de marcadores con el borde superior del combatiente, el retrato y el nombre. */
+const TRACKS_TOP = 3;
+const TRACKS_GAP = 3;
+
+/**
+ * Panel de daño y estrés: justo a la derecha del retrato, en vertical. Empieza arriba del
+ * combatiente y baja hasta el final de los PA (si los hay), repartiendo los cuadrados; el
+ * nombre se aparta lo justo para no pisarlo.
+ * @param {HTMLElement} li
+ * @param {HTMLElement} [row] Segunda línea, si existe (para alinear con los PA)
+ */
+function placeTracks(li, row) {
+  const panel = li.querySelector(":scope > .zwh-tracks");
+  const img = li.querySelector(".token-image");
+  const name = li.querySelector(".token-name");
+  if (!panel || !img || !name) return;
+  const imgRect = img.getBoundingClientRect();
+  if (!imgRect.width) return; // oculto: el observer reintentará al mostrarse
+
+  const liRect = li.getBoundingClientRect();
+  const border = parseFloat(getComputedStyle(li).borderTopWidth || 0);
+  const left = Math.round(imgRect.right - liRect.left + TRACKS_GAP);
+  li.style.setProperty("--zwh-tracks-left", `${left}px`);
+  li.style.setProperty("--zwh-tracks-top", `${TRACKS_TOP}px`);
+
+  // Alto: el natural, o el necesario para llegar al final de los PA.
+  panel.style.height = "";
+  const natural = panel.getBoundingClientRect().height;
+  const ap = row?.querySelector(".zwh-ap");
+  if (ap) {
+    const wanted = ap.getBoundingClientRect().bottom - (liRect.top + border + TRACKS_TOP);
+    if (wanted > natural) panel.style.height = `${Math.round(wanted)}px`;
+  }
+
+  // El nombre empieza tras el panel.
+  name.style.marginLeft = "0px";
+  const panelRight = panel.getBoundingClientRect().right;
+  const nameLeft = name.getBoundingClientRect().left;
+  name.style.marginLeft = `${Math.max(0, Math.round(panelRight + TRACKS_GAP - nameLeft))}px`;
 }
 
 /**
@@ -285,7 +352,11 @@ function buildActionPoints(actor) {
   return el;
 }
 
-/** Daño (corazón) y estrés (ojo): un cuadrado por estado; los verdes son los niveles que quedan y el primero se pone naranja en 0. */
+/**
+ * Daño (corazón) y estrés (ojo): dos columnas verticales, una por pista, con un cuadrado por estado.
+ * Abajo el peor estado (abatido/incapacitado) y arriba el mejor; los verdes son los niveles que
+ * quedan y el de abajo se pone naranja cuando el valor llega a 0.
+ */
 function buildTracks(actor) {
   const sa = actor.system?.stats?.secondaryAttributes;
   if (!sa?.damageCurrent && !sa?.perilCurrent) return null;
@@ -294,31 +365,30 @@ function buildTracks(actor) {
   el.className = "zwh-tracks";
 
   if (sa.damageCurrent) {
-    el.append(trackRow("fa-solid fa-heart", sa.damageCurrent.value, DAMAGE_KEYS, "ZWEI.actor.secondary.damagetracker"));
+    el.append(trackColumn("fa-solid fa-heart", sa.damageCurrent.value, DAMAGE_KEYS, "ZWEI.actor.secondary.damagetracker"));
   }
   if (sa.perilCurrent) {
     const alt = game.settings.get("zweihander", "alternativePerilSystem");
-    el.append(trackRow("fa-solid fa-eye", sa.perilCurrent.value, alt ? ALT_PERIL_KEYS : PERIL_KEYS, "ZWEI.actor.secondary.periltracker"));
+    el.append(trackColumn("fa-solid fa-eye", sa.perilCurrent.value, alt ? ALT_PERIL_KEYS : PERIL_KEYS, "ZWEI.actor.secondary.periltracker"));
   }
   return el;
 }
 
-function trackRow(iconClasses, current, keys, titleKey) {
+function trackColumn(iconClasses, current, keys, titleKey) {
   const value = Math.min(Math.max(Math.round(current ?? 0), 0), keys.length - 1);
-  const row = document.createElement("div");
-  row.className = "zwh-track";
-  row.dataset.tooltip = `${game.i18n.localize(titleKey)}: ${game.i18n.localize(`ZWEI.actor.conditions.${keys[value]}`)}`;
+  const col = document.createElement("div");
+  col.className = "zwh-track";
+  col.dataset.tooltip = `${game.i18n.localize(titleKey)}: ${game.i18n.localize(`ZWEI.actor.conditions.${keys[value]}`)}`;
+
+  // De arriba (mejor estado) a abajo (posición 0 = abatido/incapacitado).
+  for (let n = keys.length - 1; n >= 0; n--) {
+    const el = box(n >= 1 && n <= value);
+    if (n === 0 && value === 0) el.classList.add("zwh-box--danger");
+    col.append(el);
+  }
 
   const i = document.createElement("i");
   i.className = `${iconClasses} zwh-track-icon`;
-  row.append(i);
-
-  // Posición 0 = el peor estado (abatido/incapacitado): vacío mientras quede 1 o más,
-  // naranja cuando el valor llega a 0. Las posiciones 1..valor van en verde.
-  for (let n = 0; n < keys.length; n++) {
-    const el = box(n >= 1 && n <= value);
-    if (n === 0 && value === 0) el.classList.add("zwh-box--danger");
-    row.append(el);
-  }
-  return row;
+  col.append(i);
+  return col;
 }

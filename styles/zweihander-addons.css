@@ -157,53 +157,55 @@ li.combatant.zwh-drop-hover {
   flex: none;
   justify-content: center;
 }
+.zwh-ap-lead .zwh-ap {
+  box-sizing: border-box;
+  width: 100%;
+  justify-content: center;
+}
 
-/* Daño y estrés: esquina superior derecha del combatiente */
+/* Daño y estrés: dos columnas verticales justo a la derecha del retrato (posición y alto por JS) */
 li.combatant.zwh-has-tracks {
   position: relative;
-}
-/* Los valores de la derecha (recurso e iniciativa) bajan para dejar sitio a los marcadores. */
-li.combatant.zwh-has-tracks > .token-resource,
-li.combatant.zwh-has-tracks > .token-initiative {
-  padding-top: 16px;
+  min-height: 64px; /* alto mínimo del panel de marcadores */
 }
 .zwh-tracks {
   --zwh-track-green: var(--zh-clr-aqua, #689d6a);
   --zwh-track-danger: var(--zh-clr-orange-bright, #fe8019);
   position: absolute;
-  top: 0;
-  right: 0;
+  top: var(--zwh-tracks-top, 3px);
+  left: var(--zwh-tracks-left, 46px);
+  box-sizing: border-box;
   display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 2px 4px;
-  border-bottom-left-radius: 6px;
+  gap: 2px;
+  padding: 2px 3px;
+  border-radius: 6px;
   background: rgba(0, 0, 0, 0.45);
 }
 .zwh-track {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  gap: 2px;
+  justify-content: space-between;
+  gap: 1px;
 }
 .zwh-track-icon {
-  width: 11px;
-  margin-right: 2px;
-  font-size: 0.6rem;
+  width: 8px;
+  margin-top: 1px;
+  font-size: 0.55rem;
   line-height: 1;
   text-align: center;
   color: var(--zh-clr-bright2, #d5c4a1);
 }
 .zwh-tracks .zwh-box {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 1px;
 }
 .zwh-tracks .zwh-box.on {
   border-color: var(--zwh-track-green);
   background: var(--zwh-track-green);
 }
-/* 0 puntos: el primer cuadro se ilumina en naranja */
+/* 0 puntos: el cuadro de abajo se ilumina en naranja */
 .zwh-tracks .zwh-box--danger {
   border-color: var(--zwh-track-danger);
   background: var(--zwh-track-danger);
@@ -232,7 +234,7 @@ li.combatant.zwh-has-tracks > .token-initiative {
   min-width: 0;
   padding: 4px 6px;
   border-radius: 5px;
-  background-color: var(--zh-clr-bg2, #3c3836);
+  background-color: var(--zh-clr-bg3, #504945);
 }
 .zwh-combat.zwh-collapsed {
   display: none;
@@ -273,14 +275,14 @@ li.combatant.zwh-has-tracks > .token-initiative {
 
 /* Botones de las filas 3 y 4 (como los de las tarjetas de chat) */
 .zwh-addons button.zwh-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 2px;
   width: auto !important;
   height: auto !important;
   min-height: 0 !important;
   margin: 0;
-  padding: 1px 3px !important;
+  padding: 1px 4px !important;
   font-size: 0.62rem;
   line-height: 1.4;
   white-space: nowrap;
@@ -290,12 +292,19 @@ li.combatant.zwh-has-tracks > .token-initiative {
   border-radius: 4px;
   cursor: pointer;
 }
+/* El icono no ocupa sitio: se superpone en la esquina inferior derecha con un 60 % de opacidad. */
 .zwh-addons button.zwh-btn i {
-  font-size: 0.56rem;
+  position: absolute;
+  right: 1px;
+  bottom: -1px;
+  font-size: 0.65rem;
+  line-height: 1;
+  opacity: 0.6;
+  pointer-events: none;
 }
 .zwh-addons button.zwh-btn:hover:not(:disabled) {
-  background: var(--zh-clr-bg3, #504945);
-  border-color: var(--zh-clr-bg4, #665c54) !important;
+  background: var(--zh-clr-bg4, #665c54);
+  border-color: var(--zh-clr-bg4, #7c6f64) !important;
 }
 .zwh-addons button.zwh-btn:hover:not(:disabled) i {
   color: var(--zh-clr-yellow, #d79921);

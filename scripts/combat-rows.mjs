@@ -58,7 +58,8 @@ function proxyButton({ messageId, selector, icon, labelKey, before, result, rero
   label.textContent = shorten(fullText);
   // Si es una repetición, el tooltip lo dice: usa fortuna igual que "Volver a tirar" del chat.
   btn.dataset.tooltip = reroll ? `${fullText} · ${game.i18n.localize("ZWEI.chatskill.goreroll")}` : fullText;
-  btn.append(i, label);
+  // El botón mide lo que el texto; el icono se superpone en la esquina inferior derecha (por CSS).
+  btn.append(label, i);
 
   const source = chatButton(messageId, selector);
   btn.disabled = !source || source.disabled;
