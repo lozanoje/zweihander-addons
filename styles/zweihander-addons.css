@@ -329,11 +329,15 @@ li.combatant.zwh-has-tracks {
   gap: 2px;
   font-size: 0.8rem;
 }
-.zwh-marker-heart {
+/* Daño: corazón verde, gotas y calavera rojas. Estrés: cerebro verde, rayos y cama (zZZ) rojos. */
+.zwh-marker-damage-heart,
+.zwh-marker-stress-heart {
   color: var(--zh-clr-green-bright, #b8bb26);
 }
-.zwh-marker-drops,
-.zwh-marker-skull {
+.zwh-marker-damage-drops,
+.zwh-marker-damage-skull,
+.zwh-marker-stress-drops,
+.zwh-marker-stress-skull {
   color: var(--zh-clr-red-bright, #fb4934);
 }
 
@@ -364,4 +368,68 @@ li.combatant.zwh-has-tracks {
 .zwh-addons button.zwh-btn[class*="zwh-result-"] i,
 .zwh-addons button.zwh-btn[class*="zwh-result-"]:hover:not(:disabled) i {
   color: inherit;
+}
+
+/* ---------------------------------------------------------------- */
+/*  Localizar, apuntar y esperar (fila 2)                            */
+/* ---------------------------------------------------------------- */
+.zwh-addons button.zwh-mode {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px !important;
+  height: 18px !important;
+  min-height: 0 !important;
+  margin: 0;
+  padding: 0 !important;
+  font-size: 0.8rem;
+  color: var(--zh-clr-fg4, #a89984);
+  background: transparent;
+  border: 1px solid transparent !important;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.zwh-addons button.zwh-mode:hover:not(:disabled) {
+  color: var(--zh-clr-fg1, #ebdbb2);
+  background: var(--zh-clr-bg4, #665c54);
+}
+.zwh-addons button.zwh-mode:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+/* Localizado: rojo al activarse */
+.zwh-addons button.zwh-mode--localized.active {
+  color: var(--zh-clr-red-bright, #fb4934);
+  border-color: var(--zh-clr-red, #fb4934) !important;
+}
+/* Apuntar: 1 = naranja, 2 = rojo, con el número superpuesto */
+.zwh-addons button.zwh-mode--aim.aim-1 {
+  color: var(--zh-clr-orange-bright, #fe8019);
+  border-color: var(--zh-clr-orange, #fe8019) !important;
+}
+.zwh-addons button.zwh-mode--aim.aim-2 {
+  color: var(--zh-clr-red-bright, #fb4934);
+  border-color: var(--zh-clr-red, #fb4934) !important;
+}
+.zwh-mode-badge {
+  position: absolute;
+  right: -1px;
+  bottom: -2px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--zh-clr-fg0, #fbf1c7);
+  text-shadow: 0 0 2px #000, 0 0 2px #000;
+  pointer-events: none;
+}
+
+/* Parar / Esquivar que las reglas impiden: grises y sin poder pulsarse */
+.zwh-addons button.zwh-btn.zwh-btn--blocked,
+.zwh-addons button.zwh-btn.zwh-btn--blocked:hover:not(:disabled) {
+  color: var(--zh-clr-fg4, #a89984);
+  background: var(--zh-clr-bg3, #504945);
+  border-color: transparent !important;
+  opacity: 0.55;
+  cursor: not-allowed;
 }

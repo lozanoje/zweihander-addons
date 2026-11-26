@@ -1,5 +1,6 @@
 import { setSingleTarget } from "./targets.mjs";
 import { rollWeaponAttack } from "./weapon-roll.mjs";
+import { modifiersOf } from "./combat-state.mjs";
 
 /** Tipo MIME propio: no choca con el arrastre de combatientes del tracker. */
 const DRAG_MIME = "application/x-zweihander-addons-weapon";
@@ -150,5 +151,10 @@ async function performAttack({ uuid, tokenUuid }, targetToken) {
 
   const attackerDoc = tokenUuid ? await fromUuid(tokenUuid) : null;
   // El objetivo se fija después del aviso de puntos de acción: si dicen que no, no cambia nada.
-  await rollWeaponAttack(weapon, { beforeRoll: () => setSingleTarget(targetToken, attackerDoc) });
+  // Los modificadores (localizado, apuntar) son los que tenga activados el combatiente atacante.
+  const attacker = game.combat?.combatants.find((c) => c.token?.uuid === tokenUuid);
+  await rollWeaponAttack(weapon, {
+    beforeRoll: () => setSingleTarget(targetToken, attackerDoc),
+    ...(attacker ? modifiersOf(attacker.id) : {})
+  });
 }

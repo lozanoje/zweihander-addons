@@ -42,7 +42,20 @@
       "Explode": "Explotar",
       "Apply": "Aplicar",
       "Unavailable": "Esta acción no está disponible ahora mismo.",
-      "Threshold": "Umbral de daño"
+      "Threshold": "Umbral de daño",
+      "BlockedLocalized": "no se puede parar ni esquivar un ataque localizado",
+      "BlockedCritical": "no se puede parar ni esquivar un ataque crítico",
+      "StressThreshold": "Umbral de estrés"
+    },
+    "Mode": {
+      "Localized": "Ataque localizado: 2 PA y no se puede parar ni esquivar",
+      "Aim": "Apuntar",
+      "AimLevel": "Apuntar: +{bonus} a la tirada ({ap} PA)",
+      "Wait": "Esperar: sin coste de PA, baja en la iniciativa y pasa el turno al siguiente"
+    },
+    "Wait": {
+      "NotYourTurn": "Solo se puede esperar durante el turno del combatiente.",
+      "NobodyAfter": "No hay nadie detrás a quien ceder el turno."
     }
   }
 }

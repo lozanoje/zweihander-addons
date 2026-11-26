@@ -101,10 +101,15 @@ export function clearReaction() {
   pendingReaction = null;
 }
 
-function chargeReaction(rollerUuid) {
+/** Resultado de un crítico (ZweihanderDice.OUTCOME_TYPES.CRITICAL_SUCCESS). */
+const CRITICAL_SUCCESS = 3;
+
+function chargeReaction(rollerUuid, outcome) {
   const r = pendingReaction;
   if (!r || r.until < Date.now() || !r.rollers.has(rollerUuid)) return;
   pendingReaction = null;
+  // Un crítico al parar o esquivar evita todo el daño y no gasta el PA de la reacción.
+  if (outcome === CRITICAL_SUCCESS) return;
   spendAP(r.payer, r.cost);
 }
 
@@ -120,7 +125,7 @@ export function registerSpendOnRoll() {
 
     // Esquivar/parar: paga el objetivo del ataque, no quien tira (ver expectReaction).
     if (["dodge", "parry"].includes(data.testType)) {
-      chargeReaction(data.actorUuid);
+      chargeReaction(data.actorUuid, data.outcome);
       return;
     }
     if (data.testType !== "weapon") return;

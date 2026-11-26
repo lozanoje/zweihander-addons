@@ -4,7 +4,9 @@ import { MODULE_ID, applyStoredTargets } from "./targets.mjs";
 /**
  * Estado local (por cliente) de las filas de combate del tracker:
  *  - visible: si las filas 2, 3 y 4 de un combatiente se muestran (botón espada). Por defecto, ocultas.
- *  - attackMsg / damageMsg: última tarjeta de ataque y de daño del combatiente (filas 3 y 4).
+ *  - attackMsg / damageMsg / stressMsg: última tarjeta de ataque, de daño y de estrés (por pifia)
+ *    del combatiente (filas 3, 4 y 5).
+ *  - localized / aim: modificadores del próximo ataque (localizado, apuntar 1 o 2).
  *
  * Turnos: cuando le toca a un combatiente se borra su información de las filas 3 y 4 y se
  * muestran sus filas; cuando pierde el turno se ocultan, sin borrar nada.
@@ -12,6 +14,10 @@ import { MODULE_ID, applyStoredTargets } from "./targets.mjs";
 const visible = new Map();
 const attackMsg = new Map();
 const damageMsg = new Map();
+const stressMsg = new Map();
+/** Modificadores del próximo ataque de cada combatiente. */
+const localized = new Set();
+const aim = new Map();
 /**
  * Última tirada de parar/esquivar contra cada tarjeta de ataque:
  * id de la tarjeta de ataque -> { parry?: {outcome, messageId}, dodge?: {outcome, messageId} }
@@ -28,6 +34,33 @@ export function toggleVisible(combatantId) {
   return next;
 }
 
+export const isLocalized = (combatantId) => localized.has(combatantId);
+
+export function toggleLocalized(combatantId) {
+  if (localized.delete(combatantId)) return false;
+  localized.add(combatantId);
+  return true;
+}
+
+/** Apuntar: 0 = no, 1 = +10 (1 PA), 2 = +20 (2 PA). */
+export const aimLevel = (combatantId) => aim.get(combatantId) ?? 0;
+
+/** Cada clic: 0 -> 1 -> 2 -> 0. Devuelve el nuevo nivel. */
+export function cycleAim(combatantId) {
+  const next = (aimLevel(combatantId) + 1) % 3;
+  if (next) aim.set(combatantId, next);
+  else aim.delete(combatantId);
+  return next;
+}
+
+/** Modificadores activos del combatiente, listos para pasar a rollWeaponAttack. */
+export const modifiersOf = (combatantId) => ({ localized: isLocalized(combatantId), aim: aimLevel(combatantId) });
+
+function resetModifiers(combatantId) {
+  localized.delete(combatantId);
+  aim.delete(combatantId);
+}
+
 /** Resultado (0 pifia, 1 fallo, 2 éxito, 3 crítico) de la parada o esquiva contra esa tarjeta de ataque, si se ha tirado. */
 export const reactionOutcome = (attackMessageId, kind) => reactions.get(attackMessageId)?.[kind]?.outcome;
 
@@ -40,15 +73,19 @@ export function reactionMessage(attackMessageId, kind) {
 /** Mensajes ya borrados del chat se consideran inexistentes. */
 export const attackMessageOf = (combatantId) => game.messages.get(attackMsg.get(combatantId));
 export const damageMessageOf = (combatantId) => game.messages.get(damageMsg.get(combatantId));
+export const stressMessageOf = (combatantId) => game.messages.get(stressMsg.get(combatantId));
 
-const isTrackedMessage = (id) => [...attackMsg.values(), ...damageMsg.values()].includes(id);
+const isTrackedMessage = (id) => [...attackMsg.values(), ...damageMsg.values(), ...stressMsg.values()].includes(id);
 
 /** Reinicia todo el estado (p. ej. al borrar el combate). */
 export function resetCombatState() {
   visible.clear();
   attackMsg.clear();
   damageMsg.clear();
+  stressMsg.clear();
   reactions.clear();
+  localized.clear();
+  aim.clear();
   activeCombatantId = game.combat?.combatant?.id ?? null;
 }
 
@@ -58,11 +95,16 @@ export function resetCombatState() {
  */
 export function advanceTurn(nextCombatantId) {
   if (nextCombatantId === activeCombatantId) return false;
-  if (activeCombatantId) visible.set(activeCombatantId, false);
+  if (activeCombatantId) {
+    visible.set(activeCombatantId, false);
+    resetModifiers(activeCombatantId); // localizado y apuntar valen para el turno en curso
+  }
   if (nextCombatantId) {
     reactions.delete(attackMsg.get(nextCombatantId));
     attackMsg.delete(nextCombatantId);
     damageMsg.delete(nextCombatantId);
+    stressMsg.delete(nextCombatantId);
+    resetModifiers(nextCombatantId);
     visible.set(nextCombatantId, true);
   }
   activeCombatantId = nextCombatantId ?? null;
@@ -81,6 +123,9 @@ export function recordMessage(message, combat) {
   } else if (flags.weaponTestData) {
     map = damageMsg;
     actorUuid = flags.weaponTestData.actorUuid;
+  } else if (flags.madnessTestData) {
+    map = stressMsg;
+    actorUuid = flags.madnessTestData.target?.uuid;
   } else {
     return false;
   }

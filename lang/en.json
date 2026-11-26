@@ -42,7 +42,20 @@
       "Explode": "Explode",
       "Apply": "Apply",
       "Unavailable": "This action is not available right now.",
-      "Threshold": "Damage threshold"
+      "Threshold": "Damage threshold",
+      "BlockedLocalized": "a called shot cannot be parried or dodged",
+      "BlockedCritical": "a critical attack cannot be parried or dodged",
+      "StressThreshold": "Peril threshold"
+    },
+    "Mode": {
+      "Localized": "Called shot: 2 AP, cannot be parried or dodged",
+      "Aim": "Aim",
+      "AimLevel": "Aim: +{bonus} to the test ({ap} AP)",
+      "Wait": "Wait: no AP cost, drops in initiative and passes the turn to the next"
+    },
+    "Wait": {
+      "NotYourTurn": "You can only wait during the combatant's turn.",
+      "NobodyAfter": "Nobody is behind to hand the turn to."
     }
   }
 }

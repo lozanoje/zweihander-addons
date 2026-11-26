@@ -2,8 +2,10 @@ import { MODULE_ID, applyStoredTargets, getTargetIds, tokenImage } from "./targe
 import { rollWeaponAttack } from "./weapon-roll.mjs";
 import { makeWeaponDraggable, registerDropTarget } from "./drag-drop.mjs";
 import { canSeeStatus } from "./permissions.mjs";
-import { isVisible, toggleVisible } from "./combat-state.mjs";
-import { buildAttackLine, buildDamageLine } from "./combat-rows.mjs";
+import { aimLevel, cycleAim, isLocalized, isVisible, modifiersOf, toggleLocalized, toggleVisible } from "./combat-state.mjs";
+import { buildAttackLine, buildDamageLine, buildStressLine } from "./combat-rows.mjs";
+import { waitTurn } from "./combat-wait.mjs";
+import { aimBonus } from "./attack-modifiers.mjs";
 
 /**
  * Armas que se muestran como botones:
@@ -211,7 +213,12 @@ function buildRow(combatant, combat) {
 
   const ap = canSeeStatus(combatant.actor) ? buildActionPoints(combatant.actor) : null;
 
-  const lines = [buildTargetsLine(combatant, combat), buildAttackLine(combatant), buildDamageLine(combatant)].filter(Boolean);
+  const lines = [
+    buildTargetsLine(combatant, combat),
+    buildAttackLine(combatant),
+    buildDamageLine(combatant),
+    buildStressLine(combatant)
+  ].filter(Boolean);
   if (!ap && !lines.length) return null;
 
   if (ap) {
@@ -231,11 +238,12 @@ function buildRow(combatant, combat) {
   return row;
 }
 
-/** Fila 2: objetivos y armas. */
+/** Fila 2: objetivos, armas y, a su derecha, localizar, apuntar y esperar. */
 function buildTargetsLine(combatant, combat) {
   const targets = buildTargets(combatant, combat);
   const weapons = buildWeapons(combatant);
-  if (!targets.length && !weapons.length) return null;
+  const modes = buildModeButtons(combatant, combat);
+  if (!targets.length && !weapons.length && !modes.length) return null;
 
   const line = document.createElement("div");
   line.className = "zwh-line zwh-line-targets";
@@ -245,7 +253,75 @@ function buildTargetsLine(combatant, combat) {
   if (weapons.length) {
     line.append(icon("fa-solid fa-swords", "ZWH_ADDONS.Weapons"), ...weapons);
   }
+  line.append(...modes);
   return line;
+}
+
+/* ---------------- Localizar, apuntar y esperar ---------------- */
+
+/** Iconos de los botones de la fila 2 (cámbialos aquí si prefieres otros). */
+const ICON_LOCALIZED = "fa-solid fa-head-side";
+const ICON_AIM = "fa-solid fa-eye";
+const ICON_WAIT = "fa-solid fa-arrow-down";
+
+function modeButton(iconClasses, extraClass) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = `zwh-mode inline-control ${extraClass}`;
+  const i = document.createElement("i");
+  i.className = iconClasses;
+  btn.append(i);
+  return btn;
+}
+
+/**
+ * - Cabeza: ataque localizado (rojo al activarse): cuesta 2 PA y no se puede parar ni esquivar.
+ * - Ojo: apuntar; cada clic cicla 1 (naranja, +10, 1 PA) -> 2 (rojo, +20, 2 PA) -> desactivado.
+ * - Flecha abajo: esperar (sin coste de PA); solo en el turno del propio combatiente.
+ * Solo para quien controla al combatiente.
+ */
+function buildModeButtons(combatant, combat) {
+  if (!combatant.actor?.isOwner) return [];
+
+  // Localizado
+  const head = modeButton(ICON_LOCALIZED, "zwh-mode--localized");
+  head.classList.toggle("active", isLocalized(combatant.id));
+  head.dataset.tooltip = game.i18n.localize("ZWH_ADDONS.Mode.Localized");
+  head.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    head.classList.toggle("active", toggleLocalized(combatant.id));
+  });
+
+  // Apuntar
+  const aim = modeButton(ICON_AIM, "zwh-mode--aim");
+  const badge = document.createElement("span");
+  badge.className = "zwh-mode-badge";
+  aim.append(badge);
+  const paintAim = (level) => {
+    aim.classList.toggle("aim-1", level === 1);
+    aim.classList.toggle("aim-2", level === 2);
+    aim.classList.toggle("active", level > 0);
+    badge.textContent = level ? String(level) : "";
+    aim.dataset.tooltip = level
+      ? game.i18n.format("ZWH_ADDONS.Mode.AimLevel", { bonus: aimBonus(level), ap: level })
+      : game.i18n.localize("ZWH_ADDONS.Mode.Aim");
+  };
+  paintAim(aimLevel(combatant.id));
+  aim.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    paintAim(cycleAim(combatant.id));
+  });
+
+  // Esperar
+  const wait = modeButton(ICON_WAIT, "zwh-mode--wait");
+  wait.dataset.tooltip = game.i18n.localize("ZWH_ADDONS.Mode.Wait");
+  wait.disabled = !(combat.started && combat.combatant?.id === combatant.id);
+  wait.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    waitTurn(combat, combatant);
+  });
+
+  return [head, aim, wait];
 }
 
 function icon(classes, tooltipKey) {
@@ -313,8 +389,12 @@ function buildWeapons(combatant) {
     btn.dataset.tooltip = weapon.name;
     if (isOwner) {
       // El ataque va contra los objetivos que muestra la fila del combatiente (los guardados en su token).
+      // Los modificadores (localizado, apuntar) son los que estén activados en ese momento.
       btn.addEventListener("click", () =>
-        rollWeaponAttack(weapon, { beforeRoll: () => applyStoredTargets(combatant.token) })
+        rollWeaponAttack(weapon, {
+          beforeRoll: () => applyStoredTargets(combatant.token),
+          ...modifiersOf(combatant.id)
+        })
       );
       makeWeaponDraggable(btn, weapon, combatant);
     } else {

@@ -6,6 +6,8 @@ import { registerSpendOnRoll } from "./action-points.mjs";
 import { registerReactionCost } from "./ap-reactions.mjs";
 import { registerMovementCost } from "./ap-movement.mjs";
 import { registerCombatState } from "./combat-state.mjs";
+import { registerAttackModifiers } from "./attack-modifiers.mjs";
+import { registerStressOnFumble } from "./stress.mjs";
 
 Hooks.once("init", () => {
   game.settings.register(MODULE_ID, "nameMaxLength", {
@@ -68,6 +70,8 @@ Hooks.once("ready", () => {
   registerReactionCost();
   registerMovementCost();
   registerCombatState(refreshTracker);
+  registerAttackModifiers();
+  registerStressOnFumble();
 });
 
 Hooks.on("renderCombatTracker", onRenderCombatTracker);

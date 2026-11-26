@@ -1,5 +1,6 @@
 import { ATTACK_TARGETS_FLAG } from "./chat-target.mjs";
-import { attackMessageOf, damageMessageOf, reactionMessage, reactionOutcome } from "./combat-state.mjs";
+import { attackInfoOf } from "./attack-modifiers.mjs";
+import { attackMessageOf, damageMessageOf, reactionMessage, reactionOutcome, stressMessageOf } from "./combat-state.mjs";
 import { canSeeStatus } from "./permissions.mjs";
 import { MODULE_ID, setCanvasTargets } from "./targets.mjs";
 
@@ -9,6 +10,7 @@ const OUTCOME_KEYS = ["criticalfailure", "failure", "success", "criticalsuccess"
 /** Resultados: 0 pifia, 1 fallo, 2 éxito, 3 crítico (ZweihanderDice.OUTCOME_TYPES). */
 const FAILURE = 1;
 const SUCCESS = 2;
+const CRITICAL = 3;
 
 /* ---------------------------------------------------------------- */
 /*  Marcador de daño frente al umbral de daño (UD)                   */
@@ -44,7 +46,7 @@ const chatButton = (messageId, selector) =>
  * acción del sistema (y su aviso de puntos de acción). Se muestra desactivado cuando el
  * botón de la tarjeta lo está (permisos, daño ya aplicado, etc.).
  */
-function proxyButton({ messageId, selector, icon, labelKey, before, result, reroll = false }) {
+function proxyButton({ messageId, selector, icon, labelKey, before, result, reroll = false, blocked = null }) {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "zwh-btn inline-control";
@@ -60,6 +62,14 @@ function proxyButton({ messageId, selector, icon, labelKey, before, result, rero
   btn.dataset.tooltip = reroll ? `${fullText} · ${game.i18n.localize("ZWEI.chatskill.goreroll")}` : fullText;
   // El botón mide lo que el texto; el icono se superpone en la esquina inferior derecha (por CSS).
   btn.append(label, i);
+
+  // Acción que las reglas impiden (p. ej. parar un ataque localizado): gris y sin poder pulsarse.
+  if (blocked) {
+    btn.disabled = true;
+    btn.classList.add("zwh-btn--blocked");
+    btn.dataset.tooltip = `${fullText} · ${game.i18n.localize(blocked)}`;
+    return btn;
+  }
 
   const source = chatButton(messageId, selector);
   btn.disabled = !source || source.disabled;
@@ -94,12 +104,25 @@ function targetAttackTargets(message) {
 }
 
 /**
+ * Motivo por el que el defensor no puede parar ni esquivar un ataque (clave de traducción), o null.
+ * Un ataque localizado no se puede parar ni esquivar, y tampoco uno con resultado crítico.
+ */
+export function reactionBlockedReason(attackMessage) {
+  if (attackInfoOf(attackMessage).localized) return "ZWH_ADDONS.Row.BlockedLocalized";
+  if (attackMessage.flags?.zweihander?.skillTestData?.outcome === CRITICAL) return "ZWH_ADDONS.Row.BlockedCritical";
+  return null;
+}
+
+/**
  * Parar / Esquivar. La primera vez tira la reacción (botón de la tarjeta de ataque, sobre el
  * objetivo). Si ya se ha tirado, el botón pasa a ser el "Volver a tirar" de la tarjeta de esa
  * tirada: así se comporta igual que en el chat (gasta fortuna o desgracia del Fortune Tracker y
  * no tira si no queda, reutiliza la dificultad y solo abre el diálogo con Mayús) y no cuesta PA.
  */
 function reactionButton(attackMessage, kind, icon, labelKey) {
+  const blocked = reactionBlockedReason(attackMessage);
+  if (blocked) return proxyButton({ messageId: attackMessage.id, selector: `.skill-test-${kind}`, icon, labelKey, blocked });
+
   const previous = reactionMessage(attackMessage.id, kind);
   return previous
     ? proxyButton({
@@ -182,23 +205,70 @@ export function buildDamageLine(combatant) {
   return line;
 }
 
+/** Iconos de los marcadores de daño y de estrés. */
+const DAMAGE_ICONS = { heart: "fa-solid fa-heart", drops: "fa-solid fa-droplet", skull: "fa-solid fa-skull" };
+const STRESS_ICONS = { heart: "fa-solid fa-brain", drops: "fa-solid fa-bolt", skull: "fa-solid fa-bed" };
+
 /** Marcador frente al umbral de daño del primer objetivo (solo si el usuario puede ver su estado). */
 function buildMarker(data, total) {
   const first = data.targets?.[0];
   const actor = first ? fromUuidSync(first.uuid) : null;
   const threshold = actor?.system?.stats?.secondaryAttributes?.damageThreshold?.value;
+  return markerElement(actor, threshold, total, DAMAGE_ICONS, "damage");
+}
+
+/** Marcador frente al umbral de estrés del atacante (quien ha tenido la pifia). */
+function buildStressMarker(target, total) {
+  const actor = target?.uuid ? fromUuidSync(target.uuid) : null;
+  const threshold = actor?.system?.stats?.secondaryAttributes?.perilThreshold?.value;
+  return markerElement(actor, threshold, total, STRESS_ICONS, "stress");
+}
+
+function markerElement(actor, threshold, total, icons, family) {
   if (!canSeeStatus(actor) || typeof threshold !== "number" || typeof total !== "number") return null;
 
   const { kind, count } = damageMarker(total, threshold);
   const el = document.createElement("span");
-  el.className = `zwh-marker zwh-marker-${kind}`;
-  el.dataset.tooltip = `${game.i18n.localize("ZWH_ADDONS.Row.Threshold")} (${actor.name}): ${threshold}`;
+  el.className = `zwh-marker zwh-marker-${family}-${kind}`;
+  const label = family === "stress" ? "ZWH_ADDONS.Row.StressThreshold" : "ZWH_ADDONS.Row.Threshold";
+  el.dataset.tooltip = `${game.i18n.localize(label)} (${actor.name}): ${threshold}`;
 
-  const iconClass = { heart: "fa-solid fa-heart", drops: "fa-solid fa-droplet", skull: "fa-solid fa-skull" }[kind];
   for (let n = 0; n < count; n++) {
     const i = document.createElement("i");
-    i.className = iconClass;
+    i.className = icons[kind];
     el.append(i);
   }
   return el;
+}
+
+/* ---------------------------------------------------------------- */
+/*  Fila 5: tarjeta de estrés (pifia del atacante)                   */
+/* ---------------------------------------------------------------- */
+
+export function buildStressLine(combatant) {
+  const message = stressMessageOf(combatant.id);
+  const target = message?.flags?.zweihander?.madnessTestData?.target;
+  if (!target) return null;
+
+  const total = message.rolls?.[0]?.total;
+  const line = document.createElement("div");
+  line.className = "zwh-line zwh-line-stress";
+
+  const icon = document.createElement("i");
+  icon.className = "fa-solid fa-face-dizzy zwh-damage-icon";
+  line.append(icon);
+
+  const amount = document.createElement("strong");
+  amount.className = "zwh-damage-total";
+  amount.textContent = total ?? "?";
+  line.append(amount);
+
+  const marker = buildStressMarker(target, total);
+  if (marker) line.append(marker);
+
+  // Solo "Aplicar", igual que la tarjeta del chat (el estrés no explota).
+  line.append(
+    proxyButton({ messageId: message.id, selector: ".skill-test-peril", icon: "fas fa-heart-crack", labelKey: "ZWH_ADDONS.Row.Apply" })
+  );
+  return line;
 }

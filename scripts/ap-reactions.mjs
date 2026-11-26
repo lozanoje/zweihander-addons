@@ -1,5 +1,6 @@
 import { ATTACK_TARGETS_FLAG } from "./chat-target.mjs";
 import { MODULE_ID } from "./targets.mjs";
+import { reactionBlockedReason } from "./combat-rows.mjs";
 import { clearReaction, confirmIfInsufficient, expectReaction, isTracked } from "./action-points.mjs";
 
 /**
@@ -22,9 +23,55 @@ export function registerReactionCost() {
   });
 }
 
+/** Resultado de un crítico (ZweihanderDice.OUTCOME_TYPES.CRITICAL_SUCCESS). */
+const CRITICAL_SUCCESS = 3;
+
+/**
+ * Un ataque con resultado crítico hace 1 dado de furia adicional de daño. El sistema ya lo
+ * hace con su ajuste "extraFuryOnCrit"; si está desactivado, se añade aquí: se suma 1 a
+ * "additionalFuryDice" de la configuración de la tirada solo mientras el sistema lanza el
+ * daño (lo lee al empezar) y se restaura justo después.
+ */
+function boostCriticalFury(message) {
+  const data = message.flags?.zweihander?.skillTestData;
+  const config = data?.testConfiguration;
+  if (data?.outcome !== CRITICAL_SUCCESS || !config) return;
+
+  let systemHandlesIt = false;
+  try {
+    systemHandlesIt = game.settings.get("zweihander", "extraFuryOnCrit");
+  } catch {
+    // Ajuste inexistente en esta versión del sistema: se añade el dado aquí.
+  }
+  if (systemHandlesIt) return;
+
+  const original = config.additionalFuryDice;
+  config.additionalFuryDice = (original ?? 0) + 1;
+  setTimeout(() => {
+    if (original === undefined) delete config.additionalFuryDice;
+    else config.additionalFuryDice = original;
+  }, 0);
+}
+
 async function onClick(ev, message) {
+  // Daño: la tirada de un crítico lleva un dado de furia adicional.
+  const damageBtn = ev.target.closest?.(".skill-test-damage");
+  if (damageBtn) {
+    if (!damageBtn.disabled) boostCriticalFury(message);
+    return;
+  }
+
   const btn = ev.target.closest?.(".skill-test-parry, .skill-test-dodge");
   if (!btn || btn.disabled) return;
+
+  // Un ataque localizado o crítico no se puede parar ni esquivar (tampoco desde la tarjeta del chat).
+  const blocked = reactionBlockedReason(message);
+  if (blocked) {
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    ui.notifications.warn(game.i18n.localize(blocked));
+    return;
+  }
 
   // Clic reenviado tras aprobar: dejar que lo gestione el sistema.
   if (btn.dataset.zwhApproved) {
