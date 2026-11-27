@@ -2,8 +2,12 @@ import { MODULE_ID, applyStoredTargets, getTargetIds, tokenImage } from "./targe
 import { rollWeaponAttack } from "./weapon-roll.mjs";
 import { makeWeaponDraggable, registerDropTarget } from "./drag-drop.mjs";
 import { canSeeStatus } from "./permissions.mjs";
-import { aimLevel, cycleAim, isLocalized, isVisible, modifiersOf, toggleLocalized, toggleVisible } from "./combat-state.mjs";
-import { buildAttackLine, buildDamageLine, buildStressLine } from "./combat-rows.mjs";
+import {
+  aimLevel, channelLevel, cycleAim, cycleChannel, isLocalized, isMagicVisible, isVisible, modifiersOf,
+  toggleLocalized, toggleMagicVisible, toggleVisible
+} from "./combat-state.mjs";
+import { buildAttackLine, buildDamageLine, buildSpellLine, buildStressLine } from "./combat-rows.mjs";
+import { SPELL_COST, principleKey, rollSpellCast } from "./spell-roll.mjs";
 import { waitTurn } from "./combat-wait.mjs";
 import { aimBonus } from "./attack-modifiers.mjs";
 
@@ -38,7 +42,7 @@ export function onRenderCombatTracker(app, html) {
   if (!root || !combat) return;
 
   root.querySelectorAll("li.combatant[data-combatant-id]").forEach((li) => {
-    li.querySelectorAll(".zwh-addons, .zwh-tracks, .zwh-combat-toggle").forEach((el) => el.remove());
+    li.querySelectorAll(".zwh-addons, .zwh-tracks, .zwh-combat-toggle, .zwh-magic-toggle").forEach((el) => el.remove());
     li.classList.remove("zwh-has-row", "zwh-has-tracks");
 
     const combatant = combat.combatants.get(li.dataset.combatantId);
@@ -70,6 +74,9 @@ export function onRenderCombatTracker(app, html) {
 
     li.classList.add("zwh-has-row");
     li.append(row);
+
+    // Botón grimorio (Magia): muestra/oculta las filas de magia, justo a la derecha de la espada.
+    if (row.querySelector(".zwh-magic")) addMagicToggle(li, combatant);
 
     // Con los cuadrados de PA bajo el retrato sobran el número de PA y los botones de
     // devolver/gastar punto de acción de la primera fila.
@@ -239,13 +246,37 @@ function addCombatToggle(li, combatant) {
     ev.stopPropagation();
     const shown = toggleVisible(combatant.id);
     btn.classList.toggle("active", shown);
-    li.querySelector(".zwh-combat")?.classList.toggle("zwh-collapsed", !shown);
+    li.querySelector(".zwh-combat:not(.zwh-magic)")?.classList.toggle("zwh-collapsed", !shown);
     // La fila vacía (sin PA ni marco visible) se oculta por CSS; el alto del <li> cambia solo.
   });
 
   const anchor =
     controls.querySelector('[data-action="pingCombatant"]') ??
     controls.querySelector('[data-action="toggleDefeated"]');
+  if (anchor) anchor.after(btn);
+  else controls.prepend(btn);
+}
+
+/** Botón "Magia" (grimorio) a la derecha del botón espada. Muestra u oculta el marco de magia. */
+function addMagicToggle(li, combatant) {
+  const controls = li.querySelector(".combatant-controls");
+  if (!controls) return;
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "inline-control combatant-control icon fa-solid fa-book-sparkles zwh-magic-toggle";
+  btn.classList.toggle("active", isMagicVisible(combatant.id));
+  btn.dataset.tooltip = game.i18n.localize("ZWH_ADDONS.Magic");
+  btn.setAttribute("aria-label", game.i18n.localize("ZWH_ADDONS.Magic"));
+
+  btn.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    const shown = toggleMagicVisible(combatant.id);
+    btn.classList.toggle("active", shown);
+    li.querySelector(".zwh-magic")?.classList.toggle("zwh-collapsed", !shown);
+  });
+
+  const anchor = controls.querySelector(".zwh-combat-toggle") ?? controls.querySelector('[data-action="pingCombatant"]');
   if (anchor) anchor.after(btn);
   else controls.prepend(btn);
 }
@@ -268,7 +299,9 @@ function buildRow(combatant, combat) {
     buildDamageLine(combatant),
     buildStressLine(combatant)
   ].filter(Boolean);
-  if (!ap && !lines.length) return null;
+  // Marco de magia (botón grimorio): hechizos con canalizar y resultado del último hechizo.
+  const magicLines = [buildMagicLine(combatant, combat), buildSpellLine(combatant)].filter(Boolean);
+  if (!ap && !lines.length && !magicLines.length) return null;
 
   if (ap) {
     const lead = document.createElement("div");
@@ -277,12 +310,24 @@ function buildRow(combatant, combat) {
     row.append(lead);
   }
 
-  if (lines.length) {
-    const frame = document.createElement("div");
-    frame.className = "zwh-combat";
-    frame.classList.toggle("zwh-collapsed", !isVisible(combatant.id));
-    frame.append(...lines);
-    row.append(frame);
+  if (lines.length || magicLines.length) {
+    const frames = document.createElement("div");
+    frames.className = "zwh-frames";
+    if (lines.length) {
+      const frame = document.createElement("div");
+      frame.className = "zwh-combat";
+      frame.classList.toggle("zwh-collapsed", !isVisible(combatant.id));
+      frame.append(...lines);
+      frames.append(frame);
+    }
+    if (magicLines.length) {
+      const magic = document.createElement("div");
+      magic.className = "zwh-combat zwh-magic";
+      magic.classList.toggle("zwh-collapsed", !isMagicVisible(combatant.id));
+      magic.append(...magicLines);
+      frames.append(magic);
+    }
+    row.append(frames);
   }
   return row;
 }
@@ -378,6 +423,81 @@ function icon(classes, tooltipKey) {
   i.className = `${classes} zwh-icon`;
   i.dataset.tooltip = game.i18n.localize(tooltipKey);
   return i;
+}
+
+/* ---------------- Magia ---------------- */
+
+/** Hechizos de un actor usuario de magia (system.settings.isMagickUser). */
+export const listedSpells = (actor) =>
+  actor?.system?.settings?.isMagickUser === true ? actor.items.filter((item) => item.type === "spell") : [];
+
+/** Primera línea del marco de magia: objetivos, hechizos y, tras ellos, canalizar. */
+function buildMagicLine(combatant, combat) {
+  const spells = buildSpells(combatant);
+  if (!spells.length) return null;
+
+  const line = document.createElement("div");
+  line.className = "zwh-line zwh-line-magic";
+  const targets = buildTargets(combatant, combat);
+  if (targets.length) line.append(icon("fa-solid fa-bullseye", "ZWH_ADDONS.Targets"), ...targets);
+  line.append(icon("fa-solid fa-book-sparkles", "ZWH_ADDONS.Spells"), ...spells);
+  if (combatant.actor.isOwner) line.append(buildChannelButton(combatant));
+  return line;
+}
+
+/** Botones de hechizo: igual que las armas (nombre abreviado, se pueden arrastrar sobre un objetivo). */
+function buildSpells(combatant) {
+  const actor = combatant.actor;
+  if (!actor) return [];
+
+  const ownersOnly = game.settings.get(MODULE_ID, "weaponsOwnersOnly");
+  const isOwner = actor.isOwner;
+  if (ownersOnly && !isOwner) return [];
+
+  const max = game.settings.get(MODULE_ID, "nameMaxLength");
+  return listedSpells(actor).map((spell) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "zwh-weapon zwh-spell inline-control";
+    btn.textContent = truncate(spell.name, max);
+    const key = principleKey(spell);
+    btn.dataset.tooltip = `${spell.name} · ${spell.system?.principle ?? ""} (${key ? SPELL_COST[key] : "?"} PA)`;
+    if (isOwner) {
+      btn.addEventListener("click", () =>
+        rollSpellCast(spell, {
+          beforeRoll: () => applyStoredTargets(combatant.token),
+          channel: channelLevel(combatant.id)
+        })
+      );
+      makeWeaponDraggable(btn, spell, combatant);
+    } else {
+      btn.disabled = true;
+    }
+    return btn;
+  });
+}
+
+/** Canalizar: cada clic cicla 1 (naranja claro) -> 2 (naranja oscuro) -> 3 (rojo) -> desactivado. Cuesta 1 PA en cualquier nivel. */
+function buildChannelButton(combatant) {
+  const btn = modeButton("fa-solid fa-wand-magic-sparkles", "zwh-mode--channel");
+  const badge = document.createElement("span");
+  badge.className = "zwh-mode-badge";
+  btn.append(badge);
+
+  const paint = (level) => {
+    for (let n = 1; n <= 3; n++) btn.classList.toggle(`channel-${n}`, level === n);
+    btn.classList.toggle("active", level > 0);
+    badge.textContent = level ? String(level) : "";
+    btn.dataset.tooltip = level
+      ? `${game.i18n.localize(`ZWEI.rolls.channel${level}`)} · 1 PA`
+      : game.i18n.localize("ZWH_ADDONS.Mode.Channel");
+  };
+  paint(channelLevel(combatant.id));
+  btn.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    paint(cycleChannel(combatant.id));
+  });
+  return btn;
 }
 
 /* ---------------- Targets ---------------- */

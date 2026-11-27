@@ -45,13 +45,18 @@
       "Threshold": "Umbral de daño",
       "BlockedLocalized": "no se puede parar ni esquivar un ataque localizado",
       "BlockedCritical": "no se puede parar ni esquivar un ataque crítico",
-      "StressThreshold": "Umbral de estrés"
+      "StressThreshold": "Umbral de estrés",
+      "Counterspell": "Contrahechizo",
+      "CounterspellUnavailable": "el objetivo debe ser usuario de magia, y distinto del lanzador, y debes controlarlo",
+      "CounterspellCritical": "un crítico no se puede contrahechizar",
+      "CounterspellFailed": "un fallo o una pifia no se pueden contrahechizar"
     },
     "Mode": {
       "Localized": "Ataque localizado: 2 PA y no se puede parar ni esquivar",
       "Aim": "Apuntar",
       "AimLevel": "Apuntar: +{bonus} a la tirada ({ap} PA)",
-      "Wait": "Esperar: sin coste de PA, baja en la iniciativa y pasa el turno al siguiente"
+      "Wait": "Esperar: sin coste de PA, baja en la iniciativa y pasa el turno al siguiente",
+      "Channel": "Canalizar poder (1 PA): un clic = Un paso, dos = Dos pasos, tres = Tres pasos"
     },
     "Wait": {
       "NotYourTurn": "Solo se puede esperar durante el turno del combatiente.",
@@ -61,6 +66,14 @@
     },
     "Stress": {
       "Failed": "No se pudo crear la tarjeta de estrés de la pifia"
+    },
+    "Magic": "Magia",
+    "Spells": "Hechizos",
+    "Principle": {
+      "Generalist": "Generalista",
+      "Petty": "Pueril",
+      "Lesser": "Menor",
+      "Greater": "Mayor"
     }
   }
 }

@@ -13,7 +13,7 @@ export function registerChatTarget() {
   Hooks.on("preCreateChatMessage", (message, data, options, userId) => {
     if (userId !== game.user.id) return;
     const flags = message.flags?.zweihander;
-    const isAttack = flags?.skillTestData?.testType === "weapon";
+    const isAttack = ["weapon", "spell"].includes(flags?.skillTestData?.testType);
     const isDamage = !!flags?.weaponTestData;
     if (!isAttack && !isDamage) return;
 

@@ -45,13 +45,18 @@
       "Threshold": "Damage threshold",
       "BlockedLocalized": "a called shot cannot be parried or dodged",
       "BlockedCritical": "a critical attack cannot be parried or dodged",
-      "StressThreshold": "Peril threshold"
+      "StressThreshold": "Peril threshold",
+      "Counterspell": "Counterspell",
+      "CounterspellUnavailable": "the target must be a magick user, different from the caster, and you must control it",
+      "CounterspellCritical": "a critical success cannot be countered",
+      "CounterspellFailed": "a failure or a critical failure cannot be countered"
     },
     "Mode": {
       "Localized": "Called shot: 2 AP, cannot be parried or dodged",
       "Aim": "Aim",
       "AimLevel": "Aim: +{bonus} to the test ({ap} AP)",
-      "Wait": "Wait: no AP cost, drops in initiative and passes the turn to the next"
+      "Wait": "Wait: no AP cost, drops in initiative and passes the turn to the next",
+      "Channel": "Channel power (1 AP): one click = One Step, two = Two Steps, three = Three Steps"
     },
     "Wait": {
       "NotYourTurn": "You can only wait during the combatant's turn.",
@@ -61,6 +66,14 @@
     },
     "Stress": {
       "Failed": "Could not create the fumble stress card"
+    },
+    "Magic": "Magick",
+    "Spells": "Spells",
+    "Principle": {
+      "Generalist": "Generalist",
+      "Petty": "Petty",
+      "Lesser": "Lesser",
+      "Greater": "Greater"
     }
   }
 }

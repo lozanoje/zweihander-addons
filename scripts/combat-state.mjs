@@ -15,6 +15,13 @@ const visible = new Map();
 const attackMsg = new Map();
 const damageMsg = new Map();
 const stressMsg = new Map();
+const spellMsg = new Map();
+/** Última tirada de contrahechizo contra cada tarjeta de hechizo: id del hechizo -> { outcome, messageId }. */
+const counters = new Map();
+/** Filas de magia (botón grimorio) visibles. */
+const magicVisible = new Map();
+/** Canalizar del próximo hechizo: 0 (no), 1, 2 o 3 pasos. */
+const channel = new Map();
 /** Modificadores del próximo ataque de cada combatiente. */
 const localized = new Set();
 const aim = new Map();
@@ -27,6 +34,25 @@ const reactions = new Map();
 let activeCombatantId = null;
 
 export const isVisible = (combatantId) => visible.get(combatantId) === true;
+
+export const isMagicVisible = (combatantId) => magicVisible.get(combatantId) === true;
+
+export function toggleMagicVisible(combatantId) {
+  const next = !isMagicVisible(combatantId);
+  magicVisible.set(combatantId, next);
+  return next;
+}
+
+/** Canalizar: 0 = no, 1, 2 o 3 pasos (siempre 1 PA). */
+export const channelLevel = (combatantId) => channel.get(combatantId) ?? 0;
+
+/** Cada clic: 0 -> 1 -> 2 -> 3 -> 0. Devuelve el nuevo nivel. */
+export function cycleChannel(combatantId) {
+  const next = (channelLevel(combatantId) + 1) % 4;
+  if (next) channel.set(combatantId, next);
+  else channel.delete(combatantId);
+  return next;
+}
 
 export function toggleVisible(combatantId) {
   const next = !isVisible(combatantId);
@@ -59,6 +85,7 @@ export const modifiersOf = (combatantId) => ({ localized: isLocalized(combatantI
 function resetModifiers(combatantId) {
   localized.delete(combatantId);
   aim.delete(combatantId);
+  channel.delete(combatantId);
 }
 
 /** Resultado (0 pifia, 1 fallo, 2 éxito, 3 crítico) de la parada o esquiva contra esa tarjeta de ataque, si se ha tirado. */
@@ -74,8 +101,21 @@ export function reactionMessage(attackMessageId, kind) {
 export const attackMessageOf = (combatantId) => game.messages.get(attackMsg.get(combatantId));
 export const damageMessageOf = (combatantId) => game.messages.get(damageMsg.get(combatantId));
 export const stressMessageOf = (combatantId) => game.messages.get(stressMsg.get(combatantId));
+/** Resultado (0 pifia ... 3 crítico) del contrahechizo contra esa tarjeta de hechizo, si se ha tirado. */
+export const counterOutcome = (spellMessageId) => counters.get(spellMessageId)?.outcome;
 
-const isTrackedMessage = (id) => [...attackMsg.values(), ...damageMsg.values(), ...stressMsg.values()].includes(id);
+/** Anota el resultado de un contrahechizo (la tirada lleva el id del hechizo). Devuelve true si lo anotó. */
+export function recordCounter(message) {
+  const data = message.flags?.zweihander?.skillTestData;
+  const spellId = data?.testConfiguration?.zwhCounterOf;
+  if (!spellId) return false;
+  counters.set(spellId, { outcome: data.outcome, messageId: message.id });
+  return true;
+}
+
+export const spellMessageOf = (combatantId) => game.messages.get(spellMsg.get(combatantId));
+
+const isTrackedMessage = (id) => [...attackMsg.values(), ...damageMsg.values(), ...stressMsg.values(), ...spellMsg.values()].includes(id);
 
 /** Reinicia todo el estado (p. ej. al borrar el combate). */
 export function resetCombatState() {
@@ -83,6 +123,10 @@ export function resetCombatState() {
   attackMsg.clear();
   damageMsg.clear();
   stressMsg.clear();
+  spellMsg.clear();
+  counters.clear();
+  magicVisible.clear();
+  channel.clear();
   reactions.clear();
   localized.clear();
   aim.clear();
@@ -97,6 +141,7 @@ export function advanceTurn(nextCombatantId) {
   if (nextCombatantId === activeCombatantId) return false;
   if (activeCombatantId) {
     visible.set(activeCombatantId, false);
+    magicVisible.set(activeCombatantId, false);
     resetModifiers(activeCombatantId); // localizado y apuntar valen para el turno en curso
   }
   if (nextCombatantId) {
@@ -104,6 +149,8 @@ export function advanceTurn(nextCombatantId) {
     attackMsg.delete(nextCombatantId);
     damageMsg.delete(nextCombatantId);
     stressMsg.delete(nextCombatantId);
+    counters.delete(spellMsg.get(nextCombatantId));
+    spellMsg.delete(nextCombatantId);
     resetModifiers(nextCombatantId);
     visible.set(nextCombatantId, true);
   }
@@ -119,6 +166,9 @@ export function recordMessage(message, combat) {
   let map, actorUuid;
   if (flags.skillTestData?.testType === "weapon") {
     map = attackMsg;
+    actorUuid = flags.skillTestData.actorUuid;
+  } else if (flags.skillTestData?.testType === "spell") {
+    map = spellMsg;
     actorUuid = flags.skillTestData.actorUuid;
   } else if (flags.weaponTestData) {
     map = damageMsg;
@@ -174,7 +224,8 @@ export function registerCombatState(onChange) {
   Hooks.on("createChatMessage", (message) => {
     const recorded = recordMessage(message, game.combat);
     const reacted = recordReaction(message);
-    if (recorded || reacted) onChange();
+    const countered = recordCounter(message);
+    if (recorded || reacted || countered) onChange();
   });
 
   // Al editar (explotar, aplicar daño) o borrar una tarjeta seguida, o al (re)pintarla en el chat

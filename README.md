@@ -64,6 +64,17 @@ Cosas a tener en cuenta
 Quién puede repetir. El sistema activa el «Volver a tirar» de una tarjeta para el GM o para quien controle a ese actor en el momento en que se pinta la tarjeta. Si un jugador no tenía seleccionado al defensor entonces, el botón saldrá desactivado en el tracker igual que en el chat.
 Tarjeta borrada. Si borras del chat la tarjeta de esa tirada, el botón vuelve a tirar de cero como la primera vez.
 
+## Magia
+
+Los actores con `system.settings.isMagickUser = true` tienen un botón **grimorio** a la derecha de la espada que despliega el marco de magia:
+
+- **Hechizos:** botones con el nombre abreviado (mismo ajuste que las armas). Al pulsar se abre el diálogo de tirada del sistema (`item.system.roll()`). También se pueden **arrastrar** sobre un contendiente del asistente o un token del lienzo (también sobre uno mismo) para fijarlo como objetivo.
+- **PA:** generalista y pueril 1 PA, menor 2 PA, mayor 3 PA. El principio se reconoce en español, inglés y alemán (y con los nombres de `ZWEI.rolls.principetypes` del idioma activo). Se cobra al crearse la tirada; volver a tirar no cuesta.
+- **Dificultad:** el diálogo se abre con la dificultad del principio (generalista/pueril +10, menor 0, mayor -10).
+- **Canalizar:** botón (varita) tras los hechizos; cada clic cicla 1 (naranja claro), 2 (naranja oscuro), 3 (rojo) y apagado. Preselecciona «Un paso / Dos pasos / Tres pasos» en el diálogo. Cualquier nivel cuesta 1 PA (además del hechizo).
+- **Resultado:** Éxito / Fallo / Pifia con los colores habituales, «Volver a tirar» y **Contrahechizo**.
+- **Contrahechizo:** activo solo si el hechizo es un éxito normal (con crítico, fallo o pifia queda en gris) y su objetivo es usuario de magia (distinto del lanzador y controlado por el usuario). Tras tirarlo, el botón toma el color del resultado, como Parar y Esquivar. Cuesta 1 PA al objetivo y abre una prueba de su habilidad de magia con la dificultad contraria a la elegida para el hechizo (sin contar el bono de canalizar).
+
 ## Instalación
 
 Instala con este manifiesto: ```https://raw.githubusercontent.com/lozanoje/zweihander-addons/main/module.json```

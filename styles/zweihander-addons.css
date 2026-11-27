@@ -406,20 +406,22 @@ li.combatant.zwh-has-tracks {
   opacity: 0.35;
   cursor: not-allowed;
 }
-/* Localizado: rojo al activarse */
-.zwh-addons button.zwh-mode--localized.active {
-  color: var(--zh-clr-red-bright, #fb4934);
-  border-color: var(--zh-clr-red, #fb4934) !important;
+/* Estado activo de los botones de modo (localizado, apuntar, canalizar): relleno de color con icono claro/oscuro */
+.zwh-addons button.zwh-mode.active {
+  color: var(--zwh-mode-fg, #fff);
+  background: var(--zwh-mode-bg, #d32f2f);
+  border-color: var(--zwh-mode-bg, #d32f2f) !important;
 }
+.zwh-addons button.zwh-mode.active:hover:not(:disabled) {
+  color: var(--zwh-mode-fg, #fff);
+  background: var(--zwh-mode-bg, #d32f2f);
+  filter: brightness(1.15);
+}
+/* Localizado: rojo */
+.zwh-addons button.zwh-mode--localized.active { --zwh-mode-bg: #d32f2f; }
 /* Apuntar: 1 = naranja, 2 = rojo, con el número superpuesto */
-.zwh-addons button.zwh-mode--aim.aim-1 {
-  color: var(--zh-clr-orange-bright, #fe8019);
-  border-color: var(--zh-clr-orange, #fe8019) !important;
-}
-.zwh-addons button.zwh-mode--aim.aim-2 {
-  color: var(--zh-clr-red-bright, #fb4934);
-  border-color: var(--zh-clr-red, #fb4934) !important;
-}
+.zwh-addons button.zwh-mode--aim.aim-1 { --zwh-mode-bg: #f57c00; }
+.zwh-addons button.zwh-mode--aim.aim-2 { --zwh-mode-bg: #d32f2f; }
 .zwh-mode-badge {
   position: absolute;
   right: -1px;
@@ -443,6 +445,46 @@ li.combatant.zwh-has-tracks {
 }
 
 /* ---------------------------------------------------------------- */
+/*  Magia: botón grimorio, hechizos, canalizar y marco de magia       */
+/* ---------------------------------------------------------------- */
+
+/* Los marcos de combate y de magia se apilan en vertical. */
+.zwh-frames {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.zwh-frames > .zwh-combat {
+  flex: none;
+}
+
+/* Botón grimorio de la primera fila: resaltado cuando las filas de magia están visibles. */
+.zwh-magic-toggle.active {
+  color: var(--zh-clr-purple-bright, #d3869b);
+}
+
+/* Hechizos: mismo estilo que las armas (usan también la clase zwh-weapon) */
+.zwh-addons button.zwh-spell:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Canalizar: 1 = amarillo ámbar, 2 = naranja, 3 = rojo (colores fijos, no dependen del tema) */
+.zwh-addons button.zwh-mode--channel.channel-1 { --zwh-mode-bg: #ffc107; --zwh-mode-fg: #212121; }
+.zwh-addons button.zwh-mode--channel.channel-2 { --zwh-mode-bg: #ef6c00; }
+.zwh-addons button.zwh-mode--channel.channel-3 { --zwh-mode-bg: #c62828; }
+
+/* Botones de modo (localizado, apuntar, esperar, canalizar): todos con marco verde de esquinas redondeadas, también activos (el relleno de color va dentro del marco) */
+.zwh-addons button.zwh-mode,
+.zwh-addons button.zwh-mode.active,
+.zwh-addons button.zwh-mode:hover:not(:disabled),
+.zwh-addons button.zwh-mode.active:hover:not(:disabled) {
+  border: 1px solid var(--zh-clr-aqua, #689d6a) !important;
+  border-radius: 4px;
+}
+
 /*  Botón de tirar iniciativa (d20) del sistema                      */
 /* ---------------------------------------------------------------- */
 

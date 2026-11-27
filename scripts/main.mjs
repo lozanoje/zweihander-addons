@@ -8,6 +8,7 @@ import { registerMovementCost } from "./ap-movement.mjs";
 import { registerCombatState } from "./combat-state.mjs";
 import { registerAttackModifiers } from "./attack-modifiers.mjs";
 import { registerStressOnFumble } from "./stress.mjs";
+import { registerSpellDialog } from "./spell-roll.mjs";
 
 Hooks.once("init", () => {
   game.settings.register(MODULE_ID, "nameMaxLength", {
@@ -72,6 +73,7 @@ Hooks.once("ready", () => {
   registerCombatState(refreshTracker);
   registerAttackModifiers();
   registerStressOnFumble();
+  registerSpellDialog();
 });
 
 Hooks.on("renderCombatTracker", onRenderCombatTracker);
@@ -92,7 +94,7 @@ Hooks.on("updateToken", (doc, changes) => {
 
 // Puntos de acción, daño y estrés.
 Hooks.on("updateActor", (actor, changes) => {
-  if (foundry.utils.hasProperty(changes, "system.stats")) refreshTracker();
+  if (foundry.utils.hasProperty(changes, "system.stats") || foundry.utils.hasProperty(changes, "system.settings.isMagickUser")) refreshTracker();
 });
 Hooks.on("deleteToken", refreshTracker);
 Hooks.on("canvasReady", refreshTracker);

@@ -1,6 +1,7 @@
 import { setSingleTarget } from "./targets.mjs";
 import { rollWeaponAttack } from "./weapon-roll.mjs";
-import { modifiersOf } from "./combat-state.mjs";
+import { rollSpellCast } from "./spell-roll.mjs";
+import { channelLevel, modifiersOf } from "./combat-state.mjs";
 
 /** Tipo MIME propio: no choca con el arrastre de combatientes del tracker. */
 const DRAG_MIME = "application/x-zweihander-addons-weapon";
@@ -11,14 +12,14 @@ const DRAG_MIME = "application/x-zweihander-addons-weapon";
  */
 let dragging = null;
 
-/** Convierte un botón de arma en arrastrable. */
+/** Convierte un botón de arma o de hechizo en arrastrable. */
 export function makeWeaponDraggable(btn, weapon, combatant) {
   btn.draggable = true;
   btn.addEventListener("dragstart", (ev) => {
     // Evita que el tracker arrastre el combatiente completo (reordenar iniciativa).
     ev.stopPropagation();
     const tokenUuid = combatant.token?.uuid ?? null;
-    dragging = { combatantId: combatant.id, tokenUuid };
+    dragging = { combatantId: combatant.id, tokenUuid, spell: weapon.type === "spell" };
     ev.dataTransfer.setData(DRAG_MIME, JSON.stringify({ uuid: weapon.uuid, tokenUuid }));
     ev.dataTransfer.effectAllowed = "copy";
   });
@@ -38,7 +39,7 @@ export function registerDropTarget(li, app) {
   li.dataset.zwhDrop = "1";
 
   const accepts = (ev) =>
-    ev.dataTransfer?.types?.includes(DRAG_MIME) && li.dataset.combatantId !== dragging?.combatantId;
+    ev.dataTransfer?.types?.includes(DRAG_MIME) && (dragging?.spell || li.dataset.combatantId !== dragging?.combatantId);
 
   li.addEventListener("dragover", (ev) => {
     if (!accepts(ev)) return;
@@ -95,7 +96,8 @@ function canvasPoint(ev, board) {
 function tokenAt(ev, board) {
   if (!canvas.ready) return null;
   const point = canvasPoint(ev, board);
-  const exclude = dragging?.tokenUuid;
+  // Un hechizo puede lanzarse sobre uno mismo; un ataque con arma no.
+  const exclude = dragging?.spell ? null : dragging?.tokenUuid;
   return (
     canvas.tokens.placeables
       .filter(
@@ -153,6 +155,13 @@ async function performAttack({ uuid, tokenUuid }, targetToken) {
   // El objetivo se fija después del aviso de puntos de acción: si dicen que no, no cambia nada.
   // Los modificadores (localizado, apuntar) son los que tenga activados el combatiente atacante.
   const attacker = game.combat?.combatants.find((c) => c.token?.uuid === tokenUuid);
+  if (weapon.type === "spell") {
+    await rollSpellCast(weapon, {
+      beforeRoll: () => setSingleTarget(targetToken, attackerDoc),
+      channel: attacker ? channelLevel(attacker.id) : 0
+    });
+    return;
+  }
   await rollWeaponAttack(weapon, {
     beforeRoll: () => setSingleTarget(targetToken, attackerDoc),
     ...(attacker ? modifiersOf(attacker.id) : {})

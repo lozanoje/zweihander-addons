@@ -128,9 +128,11 @@ export function registerSpendOnRoll() {
       chargeReaction(data.actorUuid, data.outcome);
       return;
     }
-    if (data.testType !== "weapon") return;
+    // Ataque con arma, hechizo o contrahechizo (prueba de habilidad lanzada desde el botón del tracker).
+    const kind = { weapon: "weapon", spell: "spell", skill: "counter" }[data.testType];
+    if (!kind) return;
 
-    const key = `${data.actorUuid}|weapon`;
+    const key = `${data.actorUuid}|${kind}`;
     const entry = expected.get(key);
     if (!entry) return;
     expected.delete(key);

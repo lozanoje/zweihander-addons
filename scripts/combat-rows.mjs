@@ -1,6 +1,7 @@
 import { ATTACK_TARGETS_FLAG } from "./chat-target.mjs";
 import { attackInfoOf } from "./attack-modifiers.mjs";
-import { attackMessageOf, damageMessageOf, reactionMessage, reactionOutcome, stressMessageOf } from "./combat-state.mjs";
+import { attackMessageOf, damageMessageOf, reactionMessage, counterOutcome, reactionOutcome, spellMessageOf, stressMessageOf } from "./combat-state.mjs";
+import { canCounterspell, counterBlockedReason, counterDifficulty, rollCounterspell, spellTargetActor, COUNTERSPELL_COST } from "./spell-roll.mjs";
 import { canSeeStatus } from "./permissions.mjs";
 import { MODULE_ID, setCanvasTargets } from "./targets.mjs";
 
@@ -170,6 +171,79 @@ export function buildAttackLine(combatant) {
     );
   }
   return line;
+}
+
+/* ---------------------------------------------------------------- */
+/*  Magia: resultado del último hechizo                              */
+/* ---------------------------------------------------------------- */
+
+/**
+ * Resultado del último hechizo del combatiente: Éxito / Fallo / Pifia..., «Volver a tirar» y
+ * «Contrahechizo» (activo si el objetivo del hechizo es usuario de magia).
+ */
+export function buildSpellLine(combatant) {
+  const message = spellMessageOf(combatant.id);
+  const data = message?.flags?.zweihander?.skillTestData;
+  if (!data) return null;
+
+  const outcome = data.outcome;
+  const line = document.createElement("div");
+  line.className = "zwh-line zwh-line-spell";
+
+  const label = document.createElement("span");
+  label.className = `zwh-outcome zwh-outcome-${outcome}`;
+  label.textContent = game.i18n.localize(`ZWEI.chatskill.${OUTCOME_KEYS[outcome]}`);
+  line.append(label);
+
+  if (outcome >= FAILURE) {
+    line.append(
+      proxyButton({ messageId: message.id, selector: ".skill-test-reroll", icon: "fas fa-rotate-right", labelKey: "ZWH_ADDONS.Row.Repeat" })
+    );
+  }
+  line.append(counterspellButton(message));
+  return line;
+}
+
+/** Contrahechizo: 1 PA y prueba de Encantamiento del objetivo con la dificultad contraria. */
+function counterspellButton(message) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "zwh-btn inline-control";
+
+  const icon = document.createElement("i");
+  icon.className = "fa-solid fa-wand-magic-sparkles";
+  const text = document.createElement("span");
+  const fullText = game.i18n.localize("ZWH_ADDONS.Row.Counterspell");
+  text.textContent = shorten(fullText);
+  btn.append(text, icon);
+
+  const target = spellTargetActor(message);
+
+  // Crítico, fallo o pifia: no se puede contrahechizar (gris, como parar un ataque localizado).
+  const blocked = counterBlockedReason(message);
+  if (blocked) {
+    btn.disabled = true;
+    btn.classList.add("zwh-btn--blocked");
+    btn.dataset.tooltip = `${fullText} · ${game.i18n.localize(blocked)}`;
+    return btn;
+  }
+
+  // Si ya se ha tirado, el botón toma el color del resultado del contrahechizo (como parar y esquivar).
+  const result = counterOutcome(message.id);
+  if (typeof result === "number") btn.classList.add(`zwh-result-${result}`);
+
+  const enabled = canCounterspell(message);
+  const sign = (n) => (n > 0 ? `+${n}` : `${n}`);
+  btn.dataset.tooltip = enabled
+    ? `${fullText} · ${target.name} (${COUNTERSPELL_COST} PA, ${sign(counterDifficulty(message))}%)`
+    : `${fullText} · ${game.i18n.localize("ZWH_ADDONS.Row.CounterspellUnavailable")}`;
+  btn.disabled = !enabled;
+
+  btn.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    rollCounterspell(message);
+  });
+  return btn;
 }
 
 /* ---------------------------------------------------------------- */
