@@ -1,5 +1,6 @@
 import { ATTACK_TARGETS_FLAG } from "./chat-target.mjs";
 import { MODULE_ID } from "./targets.mjs";
+import { attackInfoOf, setPendingReroll } from "./attack-modifiers.mjs";
 import { reactionBlockedReason } from "./combat-rows.mjs";
 import { clearReaction, confirmIfInsufficient, expectReaction, isTracked } from "./action-points.mjs";
 
@@ -54,6 +55,17 @@ function boostCriticalFury(message) {
 }
 
 async function onClick(ev, message) {
+  // Repetir el ataque: la tarjeta nueva hereda el estado localizado/apuntado de esta.
+  const rerollBtn = ev.target.closest?.(".skill-test-reroll");
+  if (rerollBtn) {
+    if (!rerollBtn.disabled) {
+      const info = attackInfoOf(message);
+      const actorUuid = message.flags?.zweihander?.skillTestData?.actorUuid;
+      if (actorUuid && (info.localized || info.aim)) setPendingReroll(actorUuid, info);
+    }
+    return;
+  }
+
   // Daño: la tirada de un crítico lleva un dado de furia adicional.
   const damageBtn = ev.target.closest?.(".skill-test-damage");
   if (damageBtn) {

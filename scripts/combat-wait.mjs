@@ -26,25 +26,50 @@ export function waitInitiative(next, after) {
  * @returns {Promise<boolean>} true si esperó
  */
 export async function waitTurn(combat, combatant) {
+  const warn = (key) => ui.notifications.warn(game.i18n.localize(key));
+
   if (!combat?.started || combat.combatant?.id !== combatant.id) {
-    ui.notifications.warn(game.i18n.localize("ZWH_ADDONS.Wait.NotYourTurn"));
+    warn("ZWH_ADDONS.Wait.NotYourTurn");
     return false;
   }
 
   const turns = combat.turns;
   const index = turns.findIndex((t) => t.id === combatant.id);
-  const skipDefeated = combat.settings?.skipDefeated;
-  const counts = (t) => !(t.isDefeated && skipDefeated) && !t.actor?.statuses?.has?.("surprised");
+  if (index === -1 || index === turns.length - 1) {
+    warn("ZWH_ADDONS.Wait.NobodyAfter");
+    return false;
+  }
 
-  const nextIndex = turns.findIndex((t, i) => i > index && counts(t));
+  // Siguiente que de verdad va a actuar: se saltan derrotados y sorprendidos, como hace el sistema.
+  const skipDefeated = combat.settings?.skipDefeated;
+  const surprised = [];
+  let nextIndex = -1;
+  for (let i = index + 1; i < turns.length; i++) {
+    const t = turns[i];
+    if (t.isDefeated && skipDefeated) continue;
+    if (t.actor?.statuses?.has?.("surprised")) {
+      surprised.push(t.actor);
+      continue;
+    }
+    nextIndex = i;
+    break;
+  }
+  if (nextIndex === -1) {
+    warn("ZWH_ADDONS.Wait.AllSkipped");
+    return false;
+  }
+
   const next = turns[nextIndex];
-  if (!next || !Number.isFinite(next.initiative)) {
-    ui.notifications.warn(game.i18n.localize("ZWH_ADDONS.Wait.NobodyAfter"));
+  if (!Number.isFinite(next.initiative)) {
+    warn("ZWH_ADDONS.Wait.NoInitiative"); // aún no ha tirado iniciativa: no hay con qué compararla
     return false;
   }
 
   const initiative = waitInitiative(next.initiative, turns[nextIndex + 1]?.initiative);
   await combatant.update({ initiative });
+
+  // Los sorprendidos a los que se pasa por encima pierden la sorpresa, igual que al pasar turno.
+  await combat._consumeSurprise?.(surprised);
 
   // Foundry reordena los turnos; el turno pasa al siguiente en su nueva posición.
   const target = combat.turns.findIndex((t) => t.id === next.id);

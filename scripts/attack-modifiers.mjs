@@ -19,6 +19,17 @@ export function setPendingAttack(actorUuid, { localized = false, aim = 0 } = {})
   pending = { actorUuid, localized, aim };
 }
 
+/** Tiempo (ms) que una repetición espera a que se cree su tarjeta (con Mayús se abre un diálogo). */
+const REROLL_TTL = 2 * 60 * 1000;
+
+/**
+ * "Volver a tirar" un ataque localizado o apuntado: la tarjeta nueva hereda esos modificadores
+ * (si no, la repetición permitiría parar y esquivar un ataque localizado). Se gasta al crearse.
+ */
+export function setPendingReroll(actorUuid, { localized = false, aim = 0 } = {}) {
+  pending = { actorUuid, localized, aim, reroll: true, until: Date.now() + REROLL_TTL };
+}
+
 export function clearPendingAttack() {
   pending = null;
 }
@@ -32,16 +43,22 @@ export function registerAttackModifiers() {
   // Al crearse la tarjeta del ataque, se guardan en ella los modificadores (para el resto de usuarios y el tracker).
   Hooks.on("preCreateChatMessage", (message, data, options, userId) => {
     if (userId !== game.user.id || !pending) return;
+    if (pending.until && pending.until < Date.now()) {
+      pending = null;
+      return;
+    }
     const test = message.flags?.zweihander?.skillTestData;
     if (test?.testType !== "weapon" || test.actorUuid !== pending.actorUuid) return;
-    const { localized, aim } = pending;
+    const { localized, aim, reroll } = pending;
+    if (reroll) pending = null; // una repetición solo hereda una vez
     if (!localized && !aim) return;
     message.updateSource({ [`flags.${MODULE_ID}.attackInfo`]: { localized, aim } });
   });
 
   // Al abrirse el diálogo de la tirada de arma, se preselecciona la dificultad por apuntar.
   Hooks.on("renderApplicationV2", (app, element) => {
-    if (!pending?.aim || app.zwhAimApplied) return;
+    // En una repetición el diálogo (con Mayús) ya trae la dificultad de la tirada original.
+    if (!pending?.aim || pending.reroll || app.zwhAimApplied) return;
     const root = element instanceof HTMLElement ? element : element?.[0];
     const select = root?.querySelector?.('select[name="difficultyRatingSelect"]');
     // El diálogo de arma es el único de tirada con "dado de furia adicional".

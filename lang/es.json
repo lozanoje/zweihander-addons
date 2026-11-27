@@ -55,7 +55,12 @@
     },
     "Wait": {
       "NotYourTurn": "Solo se puede esperar durante el turno del combatiente.",
-      "NobodyAfter": "No hay nadie detrás a quien ceder el turno."
+      "NobodyAfter": "No hay nadie detrás a quien ceder el turno.",
+      "NoInitiative": "El siguiente contendiente aún no ha tirado iniciativa.",
+      "AllSkipped": "Los contendientes que van detrás están derrotados o sorprendidos."
+    },
+    "Stress": {
+      "Failed": "No se pudo crear la tarjeta de estrés de la pifia"
     }
   }
 }

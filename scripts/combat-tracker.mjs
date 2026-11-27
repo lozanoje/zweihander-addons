@@ -59,7 +59,7 @@ export function onRenderCombatTracker(app, html) {
 
     const row = buildRow(combatant, combat);
     if (!row) {
-      if (tracks) watchLayout(li, () => placeTracks(li));
+      if (tracks) watchLayout(li, () => { placeTracks(li); ensureRollButton(li); });
       return;
     }
 
@@ -71,11 +71,22 @@ export function onRenderCombatTracker(app, html) {
     li.classList.add("zwh-has-row");
     li.append(row);
 
+    // Con los cuadrados de PA bajo el retrato sobran el número de PA y los botones de
+    // devolver/gastar punto de acción de la primera fila.
+    if (row.querySelector(".zwh-ap")) removeNativeActionPoints(li);
+
     // Alinear la fila con el bloque del nombre y colocar los marcadores. Al abrir el mundo el
     // tracker aún no tiene layout (pestaña oculta / imágenes sin cargar), así que se mide ahora
     // y se vuelve a medir cada vez que cambia el tamaño del <li> o del retrato.
     watchLayout(li, () => alignRow(li, row));
   });
+}
+
+/** Quita de la primera fila el número de PA y los botones Devolver/Gastar punto de acción del sistema. */
+function removeNativeActionPoints(li) {
+  li.querySelector('[data-action="refundActionPoint"]')?.remove();
+  li.querySelector('[data-action="spendActionPoint"]')?.remove();
+  li.querySelector(".token-resource")?.remove();
 }
 
 /** Ejecuta fn ahora y cada vez que cambie el tamaño del <li> o de su retrato. */
@@ -124,8 +135,46 @@ function alignRow(li, row) {
     const width = imgWidth > 0 && imgWidth <= offset ? imgWidth : offset;
     lead.style.width = `${width}px`;
     lead.style.marginRight = `${offset - width}px`;
+    sizeActionPoints(lead, width);
   }
+
+  ensureRollButton(li);
 }
+
+/**
+ * El botón de tirar iniciativa (d20) es del sistema y debe verse siempre. Si tras colocar los
+ * elementos está oculto o con tamaño cero, se le aplica un estilo de respaldo (clase zwh-roll-fix).
+ */
+function ensureRollButton(li) {
+  const btn = li.querySelector(".token-initiative button.roll, .token-initiative .combatant-control.roll");
+  if (!btn || !li.getBoundingClientRect().width || btn.classList.contains("zwh-roll-fix")) return;
+  const style = getComputedStyle(btn);
+  const rect = btn.getBoundingClientRect();
+  const hidden =
+    style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0 ||
+    rect.width < 4 || rect.height < 4;
+  // Una vez aplicado el respaldo se mantiene (el botón ya se ve, y quitarlo lo volvería a ocultar).
+  if (hidden) btn.classList.add("zwh-roll-fix");
+}
+
+/**
+ * Ajusta el lado de los cuadrados de PA para que quepan bajo el retrato, sea cual sea el máximo
+ * de PA (3, 4, 5...): entre 6 y 12 px.
+ */
+function sizeActionPoints(lead, width) {
+  const ap = lead.querySelector(".zwh-ap");
+  const count = ap?.children.length;
+  if (!count) return;
+  const available = width - AP_PADDING * 2 - (count - 1) * AP_GAP;
+  const size = Math.max(AP_MIN, Math.min(AP_MAX, Math.floor(available / count)));
+  ap.style.setProperty("--zwh-ap-box", `${size}px`);
+}
+
+/** Relleno y separación (px) del bloque de PA, y límites del lado de cada cuadrado. */
+const AP_PADDING = 3;
+const AP_GAP = 2;
+const AP_MIN = 6;
+const AP_MAX = 12;
 
 /** Margen (px) entre el final de las filas y el borde del combatiente. */
 const EDGE_GAP = 6;
@@ -417,7 +466,17 @@ function box(on, extraClass = "") {
   return el;
 }
 
-/** Puntos de acción: cuadrados amarillos llenos = disponibles, vacíos = gastados. */
+/**
+ * Valor de PA tras pulsar el cuadrado número k (1 = el primero): si ya es justo el último
+ * encendido (value === k) se apaga y queda k - 1; si no, el marcador pasa a mostrar k.
+ * Con 3 encendidos y pulsar el 1 queda 1; pulsarlo otra vez deja 0; con 0 y pulsar el 3 quedan 3.
+ */
+export const apClickValue = (value, k) => (value === k ? k - 1 : k);
+
+/**
+ * Puntos de acción: cuadrados amarillos llenos = disponibles, vacíos = gastados. Quien controla al
+ * actor puede pulsarlos para ajustar sus PA al valor que muestra el marcador (de 0 al máximo).
+ */
 function buildActionPoints(actor) {
   const ap = actor.system?.stats?.actionPoints;
   if (!ap) return null;
@@ -428,7 +487,23 @@ function buildActionPoints(actor) {
   const el = document.createElement("div");
   el.className = "zwh-ap";
   el.dataset.tooltip = `${game.i18n.localize("ZWH_ADDONS.AP.Label")}: ${value}/${ap.max ?? total}`;
-  for (let i = 0; i < total; i++) el.append(box(i < value, "zwh-box--ap"));
+
+  const squares = [];
+  for (let i = 0; i < total; i++) {
+    const square = box(i < value, "zwh-box--ap");
+    squares.push(square);
+    if (actor.isOwner) {
+      square.classList.add("zwh-box--click");
+      square.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        const current = Math.max(0, actor.system?.stats?.actionPoints?.value ?? 0);
+        const next = apClickValue(current, i + 1);
+        squares.forEach((sq, n) => sq.classList.toggle("on", n < next)); // respuesta inmediata
+        actor.update({ "system.stats.actionPoints.value": next });
+      });
+    }
+    el.append(square);
+  }
   return el;
 }
 

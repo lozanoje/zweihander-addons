@@ -55,7 +55,12 @@
     },
     "Wait": {
       "NotYourTurn": "You can only wait during the combatant's turn.",
-      "NobodyAfter": "Nobody is behind to hand the turn to."
+      "NobodyAfter": "Nobody is behind to hand the turn to.",
+      "NoInitiative": "The next combatant has not rolled initiative yet.",
+      "AllSkipped": "The combatants behind are defeated or surprised."
+    },
+    "Stress": {
+      "Failed": "Could not create the fumble stress card"
     }
   }
 }

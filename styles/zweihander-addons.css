@@ -139,14 +139,22 @@ li.combatant.zwh-drop-hover {
 .zwh-ap {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 3px 5px;
+  gap: 2px;
+  padding: 3px;
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.4);
 }
 .zwh-box--ap {
-  width: 12px;
-  height: 12px;
+  width: var(--zwh-ap-box, 10px);
+  height: var(--zwh-ap-box, 10px);
+}
+/* Cuadrados de PA pulsables (solo para quien controla al actor) */
+.zwh-box--click {
+  cursor: pointer;
+}
+.zwh-box--click:hover {
+  border-color: var(--zwh-ap-yellow);
+  filter: brightness(1.25);
 }
 .zwh-box--ap.on {
   border-color: var(--zwh-ap-yellow);
@@ -432,4 +440,35 @@ li.combatant.zwh-has-tracks {
   border-color: transparent !important;
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------- */
+/*  Botón de tirar iniciativa (d20) del sistema                      */
+/* ---------------------------------------------------------------- */
+
+/* La columna de la iniciativa nunca se encoge. */
+li.combatant > .token-initiative {
+  flex: 0 0 32px;
+  min-width: 32px;
+}
+/* Estilo de respaldo: solo se aplica (por JS) cuando el botón queda oculto o sin tamaño. */
+li.combatant .token-initiative .zwh-roll-fix {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 32px !important;
+  min-width: 32px;
+  height: 32px !important;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  background-image: var(--initiative-icon);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 26px;
+  cursor: pointer;
+}
+li.combatant .token-initiative .zwh-roll-fix:hover {
+  background-image: var(--initiative-icon-hover, var(--initiative-icon));
 }
