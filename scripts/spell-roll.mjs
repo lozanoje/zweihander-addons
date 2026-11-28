@@ -24,6 +24,15 @@ const KNOWN_NAMES = {
   greater: ["greater", "mayor", "mächtig"]
 };
 
+/** Hechizos (items de tipo spell) de un actor, sea character, npc o creature. */
+export const spellsOf = (actor) => actor?.items?.filter((item) => item.type === "spell") ?? [];
+
+/**
+ * Usuario de magia: cualquier actor que tenga al menos un hechizo. No se usa system.settings.isMagickUser
+ * porque solo existe en los character (npc y creature no lo tienen).
+ */
+export const isMagickUser = (actor) => !!actor?.items?.some((item) => item.type === "spell");
+
 /** Coste en PA de lanzar un hechizo según su principio. */
 export const SPELL_COST = { generalist: 1, petty: 1, lesser: 2, greater: 3 };
 
@@ -209,14 +218,14 @@ export function counterBlockedReason(message) {
 
 /**
  * ¿Puede el usuario contrahechizar este hechizo? Hace falta que el hechizo sea un éxito (no un crítico,
- * fallo ni pifia), que el objetivo sea usuario de magia, que el usuario controle a ese actor y que no
+ * fallo ni pifia), que el objetivo sea usuario de magia (tenga algún hechizo), que el usuario controle a ese actor y que no
  * sea el propio lanzador.
  */
 export function canCounterspell(message) {
   if (counterBlockedReason(message)) return false;
   const target = spellTargetActor(message);
   const caster = message?.flags?.zweihander?.skillTestData?.actorUuid;
-  return !!target && target.system?.settings?.isMagickUser === true && target.isOwner && target.uuid !== caster;
+  return !!target && isMagickUser(target) && target.isOwner && target.uuid !== caster;
 }
 
 /**

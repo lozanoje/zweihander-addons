@@ -94,7 +94,7 @@ Hooks.on("updateToken", (doc, changes) => {
 
 // Puntos de acción, daño y estrés.
 Hooks.on("updateActor", (actor, changes) => {
-  if (foundry.utils.hasProperty(changes, "system.stats") || foundry.utils.hasProperty(changes, "system.settings.isMagickUser")) refreshTracker();
+  if (foundry.utils.hasProperty(changes, "system.stats")) refreshTracker();
 });
 Hooks.on("deleteToken", refreshTracker);
 Hooks.on("canvasReady", refreshTracker);

@@ -7,7 +7,7 @@ import {
   toggleLocalized, toggleMagicVisible, toggleVisible
 } from "./combat-state.mjs";
 import { buildAttackLine, buildDamageLine, buildSpellLine, buildStressLine } from "./combat-rows.mjs";
-import { SPELL_COST, principleKey, rollSpellCast } from "./spell-roll.mjs";
+import { SPELL_COST, principleKey, rollSpellCast, spellsOf } from "./spell-roll.mjs";
 import { waitTurn } from "./combat-wait.mjs";
 import { aimBonus } from "./attack-modifiers.mjs";
 
@@ -427,9 +427,8 @@ function icon(classes, tooltipKey) {
 
 /* ---------------- Magia ---------------- */
 
-/** Hechizos de un actor usuario de magia (system.settings.isMagickUser). */
-export const listedSpells = (actor) =>
-  actor?.system?.settings?.isMagickUser === true ? actor.items.filter((item) => item.type === "spell") : [];
+/** Hechizos de un actor usuario de magia: cualquier actor (character, npc, creature) con items de tipo spell. */
+export const listedSpells = (actor) => spellsOf(actor);
 
 /** Primera línea del marco de magia: objetivos, hechizos y, tras ellos, canalizar. */
 function buildMagicLine(combatant, combat) {

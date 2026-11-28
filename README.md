@@ -66,7 +66,7 @@ Tarjeta borrada. Si borras del chat la tarjeta de esa tirada, el botón vuelve a
 
 ## Magia
 
-Los actores con `system.settings.isMagickUser = true` tienen un botón **grimorio** a la derecha de la espada que despliega el marco de magia:
+Los actores con hechizos (cualquier item de tipo `spell`, sea `character`, `npc` o `creature`) son usuarios de magia y tienen un botón **grimorio** a la derecha de la espada que despliega el marco de magia:
 
 - **Hechizos:** botones con el nombre abreviado (mismo ajuste que las armas). Al pulsar se abre el diálogo de tirada del sistema (`item.system.roll()`). También se pueden **arrastrar** sobre un contendiente del asistente o un token del lienzo (también sobre uno mismo) para fijarlo como objetivo.
 - **PA:** generalista y pueril 1 PA, menor 2 PA, mayor 3 PA. El principio se reconoce en español, inglés y alemán (y con los nombres de `ZWEI.rolls.principetypes` del idioma activo). Se cobra al crearse la tirada; volver a tirar no cuesta.
