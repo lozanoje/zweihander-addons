@@ -22,6 +22,10 @@
       "ButtonMaxLength": {
         "Name": "Longitud máxima de los botones",
         "Hint": "Máximo de caracteres del texto de los botones Repetir, Parar, Esquivar, Daño, Explotar y Aplicar del asistente de combate. Los textos más largos se cortan (Aplicar con 6 queda «Aplica»); el nombre completo sale al pasar el ratón."
+      },
+      "DistanceRules": {
+        "Name": "Reglas de distancia en los ataques",
+        "Hint": "Al atacar con un arma desde el Combat Tracker se mide la distancia entre el token atacante y su objetivo: cuerpo a cuerpo (trabado), arrojadizas, armas a distancia (alcances y dificultad) y las cualidades Alcance y Pólvora. Si no se puede atacar, avisa."
       }
     },
     "NoTokenOnCanvas": "No se puede poner como objetivo: el token no está en la escena que se está viendo.",
@@ -49,7 +53,8 @@
       "Counterspell": "Contrahechizo",
       "CounterspellUnavailable": "el objetivo debe ser usuario de magia, y distinto del lanzador, y debes controlarlo",
       "CounterspellCritical": "un crítico no se puede contrahechizar",
-      "CounterspellFailed": "un fallo o una pifia no se pueden contrahechizar"
+      "CounterspellFailed": "un fallo o una pifia no se pueden contrahechizar",
+      "BlockedGunpowder": "no se puede parar ni esquivar un ataque con un arma de Pólvora"
     },
     "Mode": {
       "Localized": "Ataque localizado: 2 PA y no se puede parar ni esquivar",
@@ -74,6 +79,20 @@
       "Petty": "Pueril",
       "Lesser": "Menor",
       "Greater": "Mayor"
+    },
+    "Distance": {
+      "NotEngaged": "{weapon}: {target} está a {distance} m. Un ataque cuerpo a cuerpo exige estar trabado (a 0 m), salvo con un arma con la cualidad Alcance.",
+      "ReachTooFar": "{weapon} (Alcance): {target} está a {distance} m, pero solo llega a estar trabado o a 1 casilla.",
+      "EngagedRanged": "{weapon}: estás trabado y no puedes usar un arma a distancia, salvo con la cualidad Pólvora. {enemy}",
+      "EngagedThrown": "{weapon}: estás trabado y no puedes usar un arma arrojadiza. {enemy}",
+      "ThrownTooFar": "{weapon} es arrojadiza: solo tiene alcance corto ({short} m) y {target} está a {distance} m.",
+      "TooFar": "{target} está a {distance} m, más allá del límite de {weapon}: {max} m (4 × su alcance corto de {short} m).",
+      "Band": {
+        "medium": "Alcance medio ({distance} m): la dificultad empeora un nivel ({difficulty}%).",
+        "long": "Alcance largo ({distance} m): la dificultad empeora dos niveles ({difficulty}%).",
+        "extreme": "Distancia extrema ({distance} m): la dificultad empeora dos niveles ({difficulty}%) y el daño no lleva dados de Furia."
+      },
+      "EnemyAdjacent": "Enemigo adyacente: {name}."
     }
   }
 }

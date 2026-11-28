@@ -22,6 +22,10 @@
       "ButtonMaxLength": {
         "Name": "Maximum button length",
         "Hint": "Maximum number of characters of the Repeat, Parry, Dodge, Damage, Explode and Apply button texts in the Combat Tracker. Longer texts are cut (Apply with 4 becomes “Appl”); the full name shows on hover."
+      },
+      "DistanceRules": {
+        "Name": "Distance rules for attacks",
+        "Hint": "When attacking with a weapon from the Combat Tracker, the distance between the attacker's token and its target is measured: melee (engaged), thrown weapons, ranged weapons (ranges and difficulty) and the Reach and Gunpowder qualities. If the attack is not allowed, a warning is shown."
       }
     },
     "NoTokenOnCanvas": "Cannot target: the token is not on the scene being viewed.",
@@ -49,7 +53,8 @@
       "Counterspell": "Counterspell",
       "CounterspellUnavailable": "the target must be a magick user, different from the caster, and you must control it",
       "CounterspellCritical": "a critical success cannot be countered",
-      "CounterspellFailed": "a failure or a critical failure cannot be countered"
+      "CounterspellFailed": "a failure or a critical failure cannot be countered",
+      "BlockedGunpowder": "a Gunpowder attack cannot be parried or dodged"
     },
     "Mode": {
       "Localized": "Called shot: 2 AP, cannot be parried or dodged",
@@ -74,6 +79,20 @@
       "Petty": "Petty",
       "Lesser": "Lesser",
       "Greater": "Greater"
+    },
+    "Distance": {
+      "NotEngaged": "{weapon}: {target} is {distance} m away. A melee attack requires being engaged (0 m), unless the weapon has the Reach quality.",
+      "ReachTooFar": "{weapon} (Reach): {target} is {distance} m away, but it only reaches an engaged foe or one space away.",
+      "EngagedRanged": "{weapon}: you are engaged and cannot use a ranged weapon, except with the Gunpowder quality. {enemy}",
+      "EngagedThrown": "{weapon}: you are engaged and cannot use a thrown weapon. {enemy}",
+      "ThrownTooFar": "{weapon} is a thrown weapon: it only has Short Distance ({short} m) and {target} is {distance} m away.",
+      "TooFar": "{target} is {distance} m away, beyond the limit of {weapon}: {max} m (4 × its Short Distance of {short} m).",
+      "Band": {
+        "medium": "Medium Distance ({distance} m): difficulty worsens one level ({difficulty}%).",
+        "long": "Long Distance ({distance} m): difficulty worsens two levels ({difficulty}%).",
+        "extreme": "Extreme Distance ({distance} m): difficulty worsens two levels ({difficulty}%) and damage has no Fury Dice."
+      },
+      "EnemyAdjacent": "Adjacent enemy: {name}."
     }
   }
 }

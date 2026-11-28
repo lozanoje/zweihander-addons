@@ -75,6 +75,19 @@ Los actores con hechizos (cualquier item de tipo `spell`, sea `character`, `npc`
 - **Resultado:** Éxito / Fallo / Pifia con los colores habituales, «Volver a tirar» y **Contrahechizo**.
 - **Contrahechizo:** activo solo si el hechizo es un éxito normal (con crítico, fallo o pifia queda en gris) y su objetivo es usuario de magia (distinto del lanzador y controlado por el usuario). Tras tirarlo, el botón toma el color del resultado, como Parar y Esquivar. Cuesta 1 PA al objetivo y abre una prueba de su habilidad de magia con la dificultad contraria a la elegida para el hechizo (sin contar el bono de canalizar).
 
+## Distancias
+
+Al atacar con un arma desde el tracker (clic o arrastrando) se mide la distancia entre el token atacante y su objetivo (primer target) en casillas libres: adyacentes = 0 = **trabados**. Cada casilla vale `scene.grid.distance` metros. Si no se puede atacar, se avisa con un mensaje y no se gasta nada. Se puede desactivar con el ajuste «Reglas de distancia en los ataques».
+
+| Tipo de arma | Regla |
+|---|---|
+| Cuerpo a cuerpo | Solo trabado (0). Con la cualidad **Alcance**, también a 1 casilla. |
+| **Arrojadiza** (cualidad Arrojadiza) | Solo alcance corto; no se puede usar trabado. Si usa una habilidad cuerpo a cuerpo (cuchillo, lanza…), trabado se usa como arma cuerpo a cuerpo. |
+| A distancia | Corto: hasta F (sin penalización). Medio: hasta 2F (−10%). Largo: hasta 3F (−20%). Extremo: hasta 4F (−20% y sin dados de Furia). No se puede usar trabado. F = bono del atributo de la fórmula del arma (p. ej. [PB]) + bono de distancia. |
+| **Pólvora** | Se puede disparar trabado y el ataque no se puede parar ni esquivar. |
+
+«Trabado» incluye estar adyacente a cualquier enemigo (disposición opuesta, ni derrotado ni oculto), no solo al objetivo. La dificultad del diálogo se preselecciona (se suma a la de apuntar); a distancia extrema, «Dado de Furia adicional» se ajusta para que el daño no lleve dados de Furia. Las cualidades se reconocen en español, inglés y por su id de compendio.
+
 ## Instalación
 
 Instala con este manifiesto: ```https://raw.githubusercontent.com/lozanoje/zweihander-addons/main/module.json```

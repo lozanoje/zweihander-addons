@@ -164,6 +164,7 @@ async function performAttack({ uuid, tokenUuid }, targetToken) {
   }
   await rollWeaponAttack(weapon, {
     beforeRoll: () => setSingleTarget(targetToken, attackerDoc),
+    attackerToken: attackerDoc?.object,
     ...(attacker ? modifiersOf(attacker.id) : {})
   });
 }

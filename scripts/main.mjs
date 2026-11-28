@@ -42,6 +42,15 @@ Hooks.once("init", () => {
     default: true
   });
 
+  game.settings.register(MODULE_ID, "distanceRules", {
+    name: "ZWH_ADDONS.Settings.DistanceRules.Name",
+    hint: "ZWH_ADDONS.Settings.DistanceRules.Hint",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: true
+  });
+
   game.settings.register(MODULE_ID, "apWarning", {
     name: "ZWH_ADDONS.Settings.ApWarning.Name",
     hint: "ZWH_ADDONS.Settings.ApWarning.Hint",

@@ -106,10 +106,12 @@ function targetAttackTargets(message) {
 
 /**
  * Motivo por el que el defensor no puede parar ni esquivar un ataque (clave de traducción), o null.
- * Un ataque localizado no se puede parar ni esquivar, y tampoco uno con resultado crítico.
+ * Un ataque localizado o con un arma de Pólvora no se puede parar ni esquivar, y tampoco uno con resultado crítico.
  */
 export function reactionBlockedReason(attackMessage) {
-  if (attackInfoOf(attackMessage).localized) return "ZWH_ADDONS.Row.BlockedLocalized";
+  const info = attackInfoOf(attackMessage);
+  if (info.localized) return "ZWH_ADDONS.Row.BlockedLocalized";
+  if (info.gunpowder) return "ZWH_ADDONS.Row.BlockedGunpowder";
   if (attackMessage.flags?.zweihander?.skillTestData?.outcome === CRITICAL) return "ZWH_ADDONS.Row.BlockedCritical";
   return null;
 }

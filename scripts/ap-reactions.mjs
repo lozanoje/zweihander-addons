@@ -37,6 +37,7 @@ function boostCriticalFury(message) {
   const data = message.flags?.zweihander?.skillTestData;
   const config = data?.testConfiguration;
   if (data?.outcome !== CRITICAL_SUCCESS || !config) return;
+  if (attackInfoOf(message).noFury) return; // distancia extrema: sin dados de Furia
 
   let systemHandlesIt = false;
   try {
@@ -61,7 +62,7 @@ async function onClick(ev, message) {
     if (!rerollBtn.disabled) {
       const info = attackInfoOf(message);
       const actorUuid = message.flags?.zweihander?.skillTestData?.actorUuid;
-      if (actorUuid && (info.localized || info.aim)) setPendingReroll(actorUuid, info);
+      if (actorUuid && Object.keys(info).length) setPendingReroll(actorUuid, info);
     }
     return;
   }

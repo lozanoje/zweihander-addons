@@ -561,6 +561,7 @@ function buildWeapons(combatant) {
       btn.addEventListener("click", () =>
         rollWeaponAttack(weapon, {
           beforeRoll: () => applyStoredTargets(combatant.token),
+          attackerToken: combatant.token?.object,
           ...modifiersOf(combatant.id)
         })
       );
