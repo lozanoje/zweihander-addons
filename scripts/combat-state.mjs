@@ -1,3 +1,4 @@
+import { WAIT_OPTION, restoreActionPoints } from "./combat-wait.mjs";
 import { ATTACK_TARGETS_FLAG } from "./chat-target.mjs";
 import { MODULE_ID, applyStoredTargets } from "./targets.mjs";
 
@@ -234,8 +235,12 @@ export function registerCombatState(onChange) {
   Hooks.on("deleteChatMessage", (message) => isTrackedMessage(message.id) && onChange());
   Hooks.on("renderChatMessageHTML", (message) => isTrackedMessage(message.id) && onChange());
 
-  Hooks.on("updateCombat", (combat, changes) => {
+  Hooks.on("updateCombat", (combat, changes, options) => {
     if (combat.id !== game.combat?.id) return;
+
+    // Esperar: el nuevo turno debe empezar con todos los PA, como en un cambio de turno normal.
+    if (options?.[WAIT_OPTION] && game.users.activeGM?.isSelf) restoreActionPoints(combat.combatant);
+
     if (!("turn" in changes) && !("round" in changes)) return;
     if (!advanceTurn(combat.combatant?.id ?? null)) return;
 

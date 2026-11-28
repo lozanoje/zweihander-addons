@@ -20,6 +20,24 @@ export function waitInitiative(next, after) {
   return Math.round(value * 1e6) / 1e6; // evita ruido de coma flotante
 }
 
+/** Marca que se pasa en las opciones del update de Combat para que el GM reponga los PA del nuevo turno. */
+export const WAIT_OPTION = "zwhWait";
+
+/**
+ * Repone los PA de quien empieza su turno, igual que Combat#_onStartTurn del sistema: al máximo, o
+ * al máximo menos 1 si está aturdido. Es idempotente: si el sistema ya los repuso, no hace nada.
+ * @param {Combatant} combatant
+ */
+export async function restoreActionPoints(combatant) {
+  const actor = combatant?.actor;
+  const ap = actor?.system?.stats?.actionPoints;
+  if (!ap || !Number.isFinite(ap.max)) return;
+
+  const stunned = !!actor.statuses?.has?.("stunned");
+  const target = stunned ? Math.max(ap.max - 1, 0) : ap.max;
+  if (ap.value !== target) await actor.update({ "system.stats.actionPoints.value": target });
+}
+
 /**
  * @param {Combat} combat
  * @param {Combatant} combatant Quien espera (debe tener el turno)
@@ -73,6 +91,14 @@ export async function waitTurn(combat, combatant) {
 
   // Foundry reordena los turnos; el turno pasa al siguiente en su nueva posición.
   const target = combat.turns.findIndex((t) => t.id === next.id);
-  if (target !== -1 && combat.turn !== target) await combat.update({ turn: target });
+  if (target === -1) return true;
+
+  if (combat.turn !== target) {
+    // Foundry no siempre lanza Combat#_onStartTurn al forzar el turno tras reordenar la iniciativa, y un
+    // jugador no puede editar al actor del siguiente: el GM activo repone los PA al recibir este update.
+    await combat.update({ turn: target }, { [WAIT_OPTION]: true });
+  } else if (next.actor?.isOwner) {
+    await restoreActionPoints(next); // el turno ya apuntaba al siguiente: no hay update que lo dispare
+  }
   return true;
 }
