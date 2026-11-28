@@ -5,11 +5,16 @@ import { MODULE_ID } from "./targets.mjs";
  *
  * - La distancia entre dos tokens es el número de casillas libres entre ellos (adyacentes = 0 = trabados).
  *   Cada casilla vale `scene.grid.distance` metros (1 por defecto).
- * - Cuerpo a cuerpo: hay que estar trabado (0), o a 1 casilla con la cualidad Alcance.
- * - Arrojadiza: solo alcance corto; no se puede usar trabado.
- * - A distancia: corto (hasta F), medio (2F, -10%), largo (3F, -20%), extremo (4F, -20% y sin dado de
- *   Furia); más allá no se puede. No se puede usar trabado salvo con Pólvora.
- *   F = bono del atributo de la fórmula del arma (p. ej. [PB]) + bono de distancia del arma.
+ * - Tipos de arma: cuerpo a cuerpo = las que se usan trabado (o a 1 metro); a distancia = las que tienen
+ *   alcance (system.ranged.value); arrojadiza = a distancia con la cualidad Arrojadiza.
+ * - Cuerpo a cuerpo: hay que estar trabado (0), o a 1 metro como máximo con la cualidad Alcance (1 metro,
+ *   no 1 casilla: con 5 m por casilla, a una casilla ya no se llega).
+ * - Arrojadiza: solo alcance corto. Si el objetivo está trabado y el arma se puede usar cuerpo a cuerpo,
+ *   se ataca cuerpo a cuerpo.
+ * - A distancia: corto (hasta F), medio (2F, -10%), largo (3F, -20%), extremo (4F, -30% y sin dado de
+ *   Furia); más allá no se puede. F = bono del atributo de la fórmula del arma (p. ej. [PB]) + bono de distancia.
+ * - Estar trabado con cualquiera (el objetivo u otro) impide usar armas arrojadizas y a distancia (salvo
+ *   Pólvora, que además no se puede parar ni esquivar).
  * - Pólvora: se puede disparar trabado y el ataque no se puede parar ni esquivar.
  */
 
@@ -70,15 +75,17 @@ export async function weaponTraits(weapon) {
 /*  Tipo de arma y alcance corto                                     */
 /* ---------------------------------------------------------------- */
 
-const MELEE_SKILL = /melee|cuerpo|nahkampf|m[eê]l[eé]e|corps/;
-const RANGED_SKILL = /ranged|distancia|fernkampf|distance/;
+const MELEE_TEXT = /melee|cuerpo|nahkampf|m[eê]l[eé]e|corps/;
+const RANGED_TEXT = /ranged|distancia|fernkampf|distance/;
 
-/** "melee" / "ranged" según el nombre de la habilidad asociada al arma, o "unknown". */
-export function skillKind(weapon) {
+/**
+ * ¿Se puede usar el arma cuerpo a cuerpo? Lo indica su habilidad asociada (Cuerpo a cuerpo simple/marcial)
+ * o su tipo («Melee or Ranged»). Sirve para armas arrojadizas que también se usan trabado (cuchillo, lanza…).
+ */
+export function meleeCapable(weapon) {
   const skill = normalize(weapon?.system?.associatedSkill);
-  if (RANGED_SKILL.test(skill)) return "ranged";
-  if (MELEE_SKILL.test(skill)) return "melee";
-  return "unknown";
+  if (RANGED_TEXT.test(skill)) return false;
+  return MELEE_TEXT.test(skill) || MELEE_TEXT.test(normalize(weapon?.system?.weaponType));
 }
 
 const ATTRIBUTE_OF_BONUS = {
@@ -111,41 +118,44 @@ export function furyDiceCount(weapon) {
 /* ---------------------------------------------------------------- */
 
 /** Dificultad (modificador en %) de cada tramo de alcance: un nivel de dificultad son 10 puntos. */
-export const RANGE_DIFFICULTY = { short: 0, medium: -10, long: -20, extreme: -20 };
+export const RANGE_DIFFICULTY = { short: 0, medium: -10, long: -20, extreme: -30 };
+
+/** Alcance de la cualidad Alcance, en metros (no en casillas). */
+export const REACH_METERS = 1;
 
 /**
  * Decide si se puede atacar y con qué modificadores.
  *
  * @param {object} input
  * @param {{reach: boolean, throwing: boolean, gunpowder: boolean}} input.traits
- * @param {"melee"|"ranged"|"unknown"} input.skillKind Tipo de habilidad asociada al arma
- * @param {boolean} input.rangedFlag system.ranged.value del arma
+ * @param {boolean} input.rangedFlag system.ranged.value: el arma tiene alcance (a distancia)
+ * @param {boolean} input.meleeCapable El arma se puede usar cuerpo a cuerpo (ver meleeCapable)
  * @param {number} input.spaces Casillas libres entre atacante y objetivo (0 = trabados)
  * @param {number} input.unit Metros por casilla
  * @param {number} input.short Alcance corto en metros
- * @param {string|null} [input.engagedWith] Nombre de un enemigo adyacente al atacante (distinto del objetivo), si lo hay
+ * @param {string|null} [input.engagedWith] Nombre de otro actor con el que el atacante está trabado (distinto del objetivo)
  * @returns {{ok: boolean, mode: string, reason?: string, data?: object, info?: object}}
  *   reason: clave de ZWH_ADDONS.Distance.*; info: modificadores del ataque.
  */
-export function evaluateAttack({ traits, skillKind: skill, rangedFlag, spaces, unit, short, engagedWith = null }) {
+export function evaluateAttack({ traits, rangedFlag, meleeCapable: canMelee, spaces, unit, short, engagedWith = null }) {
   const meters = spaces * unit;
   const engagedTarget = spaces === 0;
   const engaged = engagedTarget || !!engagedWith;
-  const meleeCapable = skill === "melee" || (skill === "unknown" && !rangedFlag);
 
-  // Un arma Arrojadiza que usa una habilidad cuerpo a cuerpo (cuchillo, lanza...) trabada se usa como arma cuerpo a cuerpo.
+  // Tipo de arma: sin alcance = cuerpo a cuerpo; con alcance = a distancia, o arrojadiza si tiene la cualidad.
+  // Una arrojadiza que también se usa cuerpo a cuerpo, con el objetivo trabado, ataca cuerpo a cuerpo.
   let mode;
-  if (traits.throwing && !(engagedTarget && meleeCapable)) mode = "thrown";
-  else if (skill === "melee" || (skill === "unknown" && !rangedFlag)) mode = "melee";
-  else mode = "ranged";
+  if (!rangedFlag) mode = "melee";
+  else if (traits.throwing) mode = engagedTarget && canMelee ? "melee" : "thrown";
+  else mode = canMelee ? "melee" : "ranged"; // marcada con alcance pero de habilidad cuerpo a cuerpo (p. ej. Spontoon)
 
   const info = { mode, band: "short", difficulty: 0, gunpowder: traits.gunpowder, noFury: false };
   const fail = (reason, data = {}) => ({ ok: false, mode, reason, data: { distance: meters, short, ...data } });
 
   if (mode === "melee") {
     if (engagedTarget) return { ok: true, mode, info };
-    if (traits.reach && spaces <= 1) return { ok: true, mode, info };
-    return fail(traits.reach ? "ReachTooFar" : "NotEngaged", { reach: unit });
+    if (traits.reach && meters <= REACH_METERS) return { ok: true, mode, info };
+    return fail(traits.reach ? "ReachTooFar" : "NotEngaged");
   }
 
   if (mode === "thrown") {
@@ -193,14 +203,12 @@ export function spacesBetween(a, b) {
   return Math.max(0, Math.round(Math.max(gapX, gapY)));
 }
 
-/** ¿Son enemigos? Disposiciones opuestas (amistoso frente a hostil); los neutrales no cuentan. */
-const hostile = (a, b) => a.document.disposition * b.document.disposition === -1;
-
-/** Nombre de un enemigo adyacente al atacante (distinto del objetivo), o null. */
-function adjacentEnemy(attacker, target) {
+/** Nombre de otro actor adyacente al atacante con el que está trabado (distinto del objetivo), o null. */
+function adjacentEngaged(attacker, target) {
   for (const token of canvas.tokens.placeables) {
     if (token.id === attacker.id || token.id === target.id) continue;
-    if (token.document.hidden || !hostile(attacker, token)) continue;
+    // Los del mismo bando (misma disposición) no traban: si no, un arquero rodeado de aliados nunca podría disparar.
+    if (token.document.hidden || token.document.disposition === attacker.document.disposition) continue;
     if (token.combatant?.isDefeated || token.actor?.statuses?.has("dead")) continue;
     if (spacesBetween(attacker, token) === 0) return token.name;
   }
@@ -234,15 +242,14 @@ export async function checkAttackDistance(weapon, attackerToken) {
   if (attackerToken.document.parent?.id !== canvas.scene?.id) return TRIVIAL;
 
   const traits = await weaponTraits(weapon);
-  const skill = skillKind(weapon);
   const unit = canvas.scene.grid.distance || 1;
   const spaces = spacesBetween(attackerToken, target);
 
   const result = evaluateAttack({
-    traits, skillKind: skill, rangedFlag: !!weapon.system?.ranged?.value, spaces, unit,
+    traits, rangedFlag: !!weapon.system?.ranged?.value, meleeCapable: meleeCapable(weapon), spaces, unit,
     short: shortRange(weapon),
-    // Solo hace falta buscar enemigos adyacentes si el arma no se puede usar trabado.
-    engagedWith: spaces > 0 && !traits.gunpowder ? adjacentEnemy(attackerToken, target) : null
+    // Solo hace falta buscar con quién más está trabado si el arma no se puede usar trabado.
+    engagedWith: spaces > 0 && !traits.gunpowder ? adjacentEngaged(attackerToken, target) : null
   });
 
   const fmt = (key, data) => game.i18n.format(`ZWH_ADDONS.Distance.${key}`, data);

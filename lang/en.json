@@ -82,7 +82,7 @@
     },
     "Distance": {
       "NotEngaged": "{weapon}: {target} is {distance} m away. A melee attack requires being engaged (0 m), unless the weapon has the Reach quality.",
-      "ReachTooFar": "{weapon} (Reach): {target} is {distance} m away, but it only reaches an engaged foe or one space away.",
+      "ReachTooFar": "{weapon} (Reach): {target} is {distance} m away and the weapon only reaches 1 m.",
       "EngagedRanged": "{weapon}: you are engaged and cannot use a ranged weapon, except with the Gunpowder quality. {enemy}",
       "EngagedThrown": "{weapon}: you are engaged and cannot use a thrown weapon. {enemy}",
       "ThrownTooFar": "{weapon} is a thrown weapon: it only has Short Distance ({short} m) and {target} is {distance} m away.",
@@ -90,9 +90,9 @@
       "Band": {
         "medium": "Medium Distance ({distance} m): difficulty worsens one level ({difficulty}%).",
         "long": "Long Distance ({distance} m): difficulty worsens two levels ({difficulty}%).",
-        "extreme": "Extreme Distance ({distance} m): difficulty worsens two levels ({difficulty}%) and damage has no Fury Dice."
+        "extreme": "Extreme Distance ({distance} m): difficulty worsens three levels ({difficulty}%) and damage has no Fury Dice."
       },
-      "EnemyAdjacent": "Adjacent enemy: {name}."
+      "EnemyAdjacent": "Engaged with: {name}."
     }
   }
 }

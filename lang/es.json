@@ -82,7 +82,7 @@
     },
     "Distance": {
       "NotEngaged": "{weapon}: {target} está a {distance} m. Un ataque cuerpo a cuerpo exige estar trabado (a 0 m), salvo con un arma con la cualidad Alcance.",
-      "ReachTooFar": "{weapon} (Alcance): {target} está a {distance} m, pero solo llega a estar trabado o a 1 casilla.",
+      "ReachTooFar": "{weapon} (Alcance): {target} está a {distance} m y el arma solo llega a 1 m.",
       "EngagedRanged": "{weapon}: estás trabado y no puedes usar un arma a distancia, salvo con la cualidad Pólvora. {enemy}",
       "EngagedThrown": "{weapon}: estás trabado y no puedes usar un arma arrojadiza. {enemy}",
       "ThrownTooFar": "{weapon} es arrojadiza: solo tiene alcance corto ({short} m) y {target} está a {distance} m.",
@@ -90,9 +90,9 @@
       "Band": {
         "medium": "Alcance medio ({distance} m): la dificultad empeora un nivel ({difficulty}%).",
         "long": "Alcance largo ({distance} m): la dificultad empeora dos niveles ({difficulty}%).",
-        "extreme": "Distancia extrema ({distance} m): la dificultad empeora dos niveles ({difficulty}%) y el daño no lleva dados de Furia."
+        "extreme": "Distancia extrema ({distance} m): la dificultad empeora tres niveles ({difficulty}%) y el daño no lleva dados de Furia."
       },
-      "EnemyAdjacent": "Enemigo adyacente: {name}."
+      "EnemyAdjacent": "Trabado con: {name}."
     }
   }
 }
